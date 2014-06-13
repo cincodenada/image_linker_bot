@@ -11,6 +11,7 @@ from pprint import pprint
 import random
 import collections
 import pickle
+import signal
 
 def load_imagelist(config):
   matchlist = {}
@@ -33,28 +34,46 @@ def form_reply(link_list):
   reply = "\n".join(lines) + "\n\n" + config['bot']['footer']
   return reply
 
+def signal_handler(signum, frame):
+  if(signum == signal.SIGHUP):
+      load_settings()
+
+
+def load_settings():
+  global bans
+  global config
+  global imagemap
+
+  print "Reloading config..."
+  config = yaml.load(open('config.yaml'))
+
+  #Load banlist
+  print "Loading banlist..."
+  bottiquette = r.get_wiki_page('Bottiquette', 'robots_txt_json')
+  banlist = json.loads(bottiquette.content_md)
+  bans = banlist['disallowed'] +\
+    banlist['posts-only'] +\
+    banlist['permission']
+
+  #Load image map
+  imageconf = yaml.load(open('imagelist.yaml'))
+  imagemap = load_imagelist(imageconf)
+  print "Loaded image map:"
+  pprint(imagemap)
+
+
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
 
 #Load config and set up
 print "Logging in..."
 config = yaml.load(open('config.yaml'))
-r = praw.Reddit('Image Text Linker by /u/cincodenada v 0.1')
+r = praw.Reddit('Image Text Linker by /u/cincodenada v0.1 at /r/image_linker_bot')
 r.login(config['account']['username'],config['account']['password'])
 
-#Load banlist
-print "Loading banlist..."
-bottiquette = r.get_wiki_page('Bottiquette', 'robots_txt_json')
-banlist = json.loads(bottiquette.content_md)
-bans = banlist['disallowed'] +\
-  banlist['posts-only'] +\
-  banlist['permission']
+load_settings()
+signal.signal(signal.SIGHUP,signal_handler)
 
-#Load image map
-imageconf = yaml.load(open('imagelist.yaml'))
 maybeimage = re.compile(r'(?:^|\s)(\w+)\.(jpeg|png|gif|jpg|bmp)\b',re.IGNORECASE)
-imagemap = load_imagelist(imageconf)
-print "Starting up with image map:"
-pprint(imagemap)
 
 #Load already-checked queue
 try:
@@ -106,7 +125,7 @@ try:
                 foundkeys.append(searchkey)
                 commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
               else:
-                print u"\nPossible new image for %s\n%s" % (comment.permalink, match.join(' '))
+                print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
           
           if len(commentlinks):
             replytext = form_reply(commentlinks)
