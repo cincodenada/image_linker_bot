@@ -50,8 +50,9 @@ bans = banlist['disallowed'] +\
   banlist['permission']
 
 #Load image map
+imageconf = yaml.load(open('imagelist.yaml'))
 maybeimage = re.compile(r'(?:^|\s)(\w+)\.(jpeg|png|gif|jpg|bmp)\b',re.IGNORECASE)
-imagemap = load_imagelist(config)
+imagemap = load_imagelist(imageconf)
 print "Starting up with image map:"
 pprint(imagemap)
 
@@ -92,19 +93,20 @@ try:
           for match in matches:
             #Add the match to the list if it's not a dup
             (key, ext) = match
-            if key not in foundkeys:
-              if key in imagemap:
-                urls = imagemap[key]
+            searchkey = key.lower()
+            if searchkey not in foundkeys:
+              if searchkey in imagemap:
+                urls = imagemap[searchkey]
                 #Follow aliases
                 if not isinstance(urls, list):
-                  key = urls
-                  if key in foundkeys: continue
-                  urls = imagemap[key]
+                  searchkey = urls.lower()
+                  if searchkey in foundkeys: continue
+                  urls = imagemap[searchkey]
 
-                foundkeys.append(key)
+                foundkeys.append(searchkey)
                 commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
               else:
-                print u"\nPossible new image for %s - %s" % (comment.permalink, match)
+                print u"\nPossible new image for %s\n%s" % (comment.permalink, match.join(' '))
           
           if len(commentlinks):
             replytext = form_reply(commentlinks)
@@ -116,6 +118,8 @@ try:
               time.sleep(e.sleep_time)
               print "Re-commenting on %s" % (comment.permalink)
               comment.reply(replytext)
+
+      sys.stdout.flush()
             
 except (KeyboardInterrupt, Exception), e:
   pprint(e)
