@@ -90,8 +90,14 @@ try:
         
         if len(commentlinks):
           replytext = form_reply(commentlinks)
-          print "Commenting on %s" % (comment.permalink)
-          comment.reply(replytext)
+          try:
+            print "Commenting on %s" % (comment.permalink)
+            comment.reply(replytext)
+          except praw.errors.RateLimitExceeded, e:
+            print "Rate limit exceeded, sleeping %d seconds and trying again..." % (e.sleep_time)
+            time.sleep(e.sleep_time*1.1)
+            print "Re-commenting on %s" % (comment.permalink)
+            comment.reply(replytext)
           
 except KeyboardInterrupt:
   print "Shutting down..."
