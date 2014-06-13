@@ -1,0 +1,10 @@
+account:
+    username: bot_username
+    password: bot_password
+
+images:
+    thatsthejoke: http://i.imgur.com/Z5pWhBi.jpg
+    tmyk: http://i.imgur.com/7QWop.gif
+
+aliases:
+    tmyk: themoreyouknow
