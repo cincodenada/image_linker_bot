@@ -10,6 +10,7 @@ import json
 from pprint import pprint
 import random
 import collections
+import pickle
 
 def load_imagelist(config):
   matchlist = {}
@@ -29,7 +30,7 @@ def load_imagelist(config):
 
 def form_reply(link_list):
   lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
-  reply = "\n".join(lines) + "\n\n" + config['comments']['footer']
+  reply = "\n".join(lines) + "\n\n" + config['bot']['footer']
   return reply
 
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
@@ -54,10 +55,22 @@ imagemap = load_imagelist(config)
 print "Starting up with image map:"
 pprint(imagemap)
 
+#Load already-checked queue
+try:
+  already_seen = pickle.load(open('seen.pickle'))
+except Exception:
+  already_seen = collections.deque(maxlen=config['bot']['seen_len'])
+
 numchecked = 0
 try:
   while True:
     for comment in praw.helpers.comment_stream(r, 'all', limit=None, verbosity=0):
+      if comment.id in already_seen:
+        print "Already saw comment %s, skipping..." % (comment.id)
+        continue
+
+      already_seen.append(comment.id)
+
       if hasattr(comment,'body'):
         numchecked += 1
         sys.stderr.write("\rChecked %d comments..." % (numchecked))
@@ -104,5 +117,7 @@ try:
               print "Re-commenting on %s" % (comment.permalink)
               comment.reply(replytext)
             
-except KeyboardInterrupt:
+except (KeyboardInterrupt, Exception), e:
+  pprint(e)
   print "Shutting down..."
+  pickle.dump(already_seen,open('seen.pickle','w'))
