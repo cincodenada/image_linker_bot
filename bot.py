@@ -65,39 +65,44 @@ try:
         commentlinks = collections.OrderedDict()
         foundkeys = []
         matches = maybeimage.findall(comment.body)
-        for match in matches:
+        if len(matches):
           #Don't post in bot-banned subreddits
           subreddit = comment.submission.subreddit.display_name
           if subreddit in bans:
             print "Skipping banned subreddit %s" % (comment.submission.subreddit.display_name)
-            break
+            continue
 
-          #Add the match to the list if it's not a dup
-          (key, ext) = match
-          if key not in foundkeys:
-            if key in imagemap:
-              urls = imagemap[key]
-              #Follow aliases
-              if not isinstance(urls, list):
-                key = urls
-                if key in foundkeys: continue
+          #Don't reply to self, just in case...
+          if comment.author == config['account']['username']:
+            continue
+
+          for match in matches:
+            #Add the match to the list if it's not a dup
+            (key, ext) = match
+            if key not in foundkeys:
+              if key in imagemap:
                 urls = imagemap[key]
+                #Follow aliases
+                if not isinstance(urls, list):
+                  key = urls
+                  if key in foundkeys: continue
+                  urls = imagemap[key]
 
-              foundkeys.append(key)
-              commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
-            else:
-              print u"\nPossible new image for %s - %s" % (comment.permalink, match)
-        
-        if len(commentlinks):
-          replytext = form_reply(commentlinks)
-          try:
-            print "Commenting on %s" % (comment.permalink)
-            comment.reply(replytext)
-          except praw.errors.RateLimitExceeded, e:
-            print "Rate limit exceeded, sleeping %d seconds and trying again..." % (e.sleep_time)
-            time.sleep(e.sleep_time*1.1)
-            print "Re-commenting on %s" % (comment.permalink)
-            comment.reply(replytext)
+                foundkeys.append(key)
+                commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
+              else:
+                print u"\nPossible new image for %s - %s" % (comment.permalink, match)
           
+          if len(commentlinks):
+            replytext = form_reply(commentlinks)
+            try:
+              print "Commenting on %s" % (comment.permalink)
+              comment.reply(replytext)
+            except praw.errors.RateLimitExceeded, e:
+              print "Rate limit exceeded, sleeping %d seconds and trying again..." % (e.sleep_time)
+              time.sleep(e.sleep_time)
+              print "Re-commenting on %s" % (comment.permalink)
+              comment.reply(replytext)
+            
 except KeyboardInterrupt:
   print "Shutting down..."
