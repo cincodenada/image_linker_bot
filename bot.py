@@ -9,6 +9,7 @@ import yaml
 import json
 from pprint import pprint
 import random
+import collections
 
 def load_imagelist(config):
   matchlist = {}
@@ -25,6 +26,11 @@ def load_imagelist(config):
       matchlist[alias] = key
 
   return matchlist
+
+def form_reply(link_list):
+  lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
+  reply = "\n".join(lines) + "\n\n" + config['comments']['footer']
+  return reply
 
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
 
@@ -43,7 +49,7 @@ bans = banlist['disallowed'] +\
   banlist['permission']
 
 #Load image map
-maybeimage = re.compile(r'(?:^|\s)(\w+)\.(?:jpeg|png|gif|jpg|bmp)\b',re.IGNORECASE)
+maybeimage = re.compile(r'(?:^|\s)(\w+)\.(jpeg|png|gif|jpg|bmp)\b',re.IGNORECASE)
 imagemap = load_imagelist(config)
 print "Starting up with image map:"
 pprint(imagemap)
@@ -55,6 +61,9 @@ try:
       if hasattr(comment,'body'):
         numchecked += 1
         sys.stderr.write("\rChecked %d comments..." % (numchecked))
+
+        commentlinks = collections.OrderedDict()
+        foundkeys = []
         matches = maybeimage.findall(comment.body)
         for match in matches:
           #Don't post in bot-banned subreddits
@@ -63,14 +72,26 @@ try:
             print "Skipping banned subreddit %s" % (comment.submission.subreddit.display_name)
             break
 
-          if match in imagemap:
-            urls = imagemap[match]
-            #Follow aliases
-            if not isinstance(urls, list):
-              urls = imagemap[urls]
+          #Add the match to the list if it's not a dup
+          (key, ext) = match
+          if key not in foundkeys:
+            if key in imagemap:
+              urls = imagemap[key]
+              #Follow aliases
+              if not isinstance(urls, list):
+                key = urls
+                if key in foundkeys: continue
+                urls = imagemap[key]
 
-            print u"\nI want to comment on %s - %s" % (comment.permalink, random.choice(urls))
-          else:
-            print u"\nPossible new image for %s - %s" % (comment.permalink, match)
+              foundkeys.append(key)
+              commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
+            else:
+              print u"\nPossible new image for %s - %s" % (comment.permalink, match)
+        
+        if len(commentlinks):
+          replytext = form_reply(commentlinks)
+          print "Commenting on %s" % (comment.permalink)
+          comment.reply(replytext)
+          
 except KeyboardInterrupt:
   print "Shutting down..."
