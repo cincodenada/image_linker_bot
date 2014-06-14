@@ -43,24 +43,33 @@ def load_settings():
   global bans
   global config
   global imagemap
+  global r
 
   print "Reloading config..."
+  sys.stdout.flush()
   config = yaml.load(open('config.yaml'))
 
   #Load banlist
   print "Loading banlist..."
+  sys.stdout.flush()
   bottiquette = r.get_wiki_page('Bottiquette', 'robots_txt_json')
   banlist = json.loads(bottiquette.content_md)
-  bans = banlist['disallowed'] +\
-    banlist['posts-only'] +\
-    banlist['permission']
+  btqban = (banlist['disallowed'] +\
+      banlist['posts-only'] +\
+      banlist['permission'])
+
+  mybans = [x for x in list(open('blacklist.txt'))\
+      if not (x.strip() == '' or x.startswith('#'))]
+  
+  bans = [x.strip().lower() for x in (btqban + mybans)]
+  print "Ignoring subreddits: %s" % (', '.join(bans))
 
   #Load image map
   imageconf = yaml.load(open('imagelist.yaml'))
   imagemap = load_imagelist(imageconf)
   print "Loaded image map:"
   pprint(imagemap)
-
+  sys.stdout.flush()
 
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
 
@@ -82,8 +91,8 @@ except Exception:
   already_seen = collections.deque(maxlen=config['bot']['seen_len'])
 
 numchecked = 0
-try:
-  while True:
+while True:
+  try:
     for comment in praw.helpers.comment_stream(r, 'all', limit=None, verbosity=0):
       if comment.id in already_seen:
         print "Already saw comment %s, skipping..." % (comment.id)
@@ -100,9 +109,9 @@ try:
         matches = maybeimage.findall(comment.body)
         if len(matches):
           #Don't post in bot-banned subreddits
-          subreddit = comment.submission.subreddit.display_name
+          subreddit = comment.submission.subreddit.display_name.lower()
           if subreddit in bans:
-            print "Skipping banned subreddit %s" % (comment.submission.subreddit.display_name)
+            print "Skipping banned subreddit %s" % (subreddit)
             continue
 
           #Don't reply to self, just in case...
@@ -140,7 +149,10 @@ try:
 
       sys.stdout.flush()
             
-except (KeyboardInterrupt, Exception), e:
-  pprint(e)
-  print "Shutting down..."
-  pickle.dump(already_seen,open('seen.pickle','w'))
+  except (KeyboardInterrupt, Exception), e:
+    pprint(e)
+    print "Shutting down after scanning %d comments..." % (numchecked)
+    pickle.dump(already_seen,open('seen.pickle','w'))
+    sys.exit("Keyboard interrupt, shutting down...")
+  except Exception, e:
+    pprint(e)
