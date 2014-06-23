@@ -82,7 +82,8 @@ r.login(config['account']['username'],config['account']['password'])
 load_settings()
 signal.signal(signal.SIGHUP,signal_handler)
 
-maybeimage = re.compile(r'(?:^|\s)(\w+)\.(jpeg|png|gif|jpg|bmp)\b',re.IGNORECASE)
+ext_list = '|'.join(config['bot']['extensions'])
+maybeimage = re.compile(r'(?:^|\s)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
 #Load already-checked queue
 try:
@@ -137,9 +138,17 @@ while True:
                 print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
           
           if len(commentlinks):
+            if(not comment.is_root):
+              parent = r.get_info(thing_id=comment.parent_id)
+              subreddit = comment.submission.subreddit.display_name.lower()
+              if(parent.author == config['account'] and subreddit != config['account']):
+                print "Sending warning to %s for reply-reply..." % (comment.author)
+                r.send_message(comment.author,'I\'m glad you like me, but...',config['bot']['toomuch'],raise_captcha_exception=True)
+                continue
+
             replytext = form_reply(commentlinks)
             try:
-              print "Commenting on %s" % (comment.permalink)
+              print "Commenting on %s (%s)" % (comment.permalink, ', '.join(commentlinks.keys()))
               comment.reply(replytext)
             except praw.errors.RateLimitExceeded, e:
               print "Rate limit exceeded, sleeping %d seconds and trying again..." % (e.sleep_time)
@@ -149,8 +158,7 @@ while True:
 
       sys.stdout.flush()
             
-  except (KeyboardInterrupt, Exception), e:
-    pprint(e)
+  except KeyboardInterrupt:
     print "Shutting down after scanning %d comments..." % (numchecked)
     pickle.dump(already_seen,open('seen.pickle','w'))
     sys.exit("Keyboard interrupt, shutting down...")
