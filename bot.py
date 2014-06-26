@@ -133,7 +133,10 @@ while True:
                   urls = imagemap[searchkey]
 
                 foundkeys.append(searchkey)
-                commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
+                matchurl = random.choice(urls)
+                urlext = re.search(r'\.(\w+)$',matchurl)
+                useext = urlext.group(1) if urlext else ext
+                commentlinks["%s.%s" % (key,useext)] = matchurl
               else:
                 print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
           
