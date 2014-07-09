@@ -29,6 +29,26 @@ def load_imagelist(config):
 
   return matchlist
 
+def print_imagelist(config, format = 'markdown'):
+  headers = {
+    'markdown': "|Triggers|Responses|\n|:-|:-|\n"
+  }
+  imagelist = headers[format];
+  for key, urls in config['images'].iteritems():
+    keylist = [key]
+    if(not isinstance(urls, list)):
+      urls = [urls]
+    if(key in config['aliases']):
+      aliases = config['aliases'][key]
+      if(not isinstance(aliases, list)):
+        aliases = [aliases]
+      keylist += aliases
+    
+    if(format == 'markdown'):
+       imagelist += "|%s|%s|\n" % (', '.join(keylist), ' '.join(['[%d](%s)' % (i+1,url) for i, url in enumerate(urls)]))
+
+  return imagelist
+
 def form_reply(link_list):
   lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
   reply = "\n".join(lines) + "\n\n" + config['bot']['footer']
@@ -67,6 +87,12 @@ def load_settings():
   #Load image map
   imageconf = yaml.load(open('imagelist.yaml'))
   imagemap = load_imagelist(imageconf)
+
+  markdown = print_imagelist(imageconf)
+  mdf = open('imagelist.md','w')
+  mdf.write(markdown)
+  mdf.close()
+
   print "Loaded image map:"
   pprint(imagemap)
   sys.stdout.flush()
