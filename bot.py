@@ -120,7 +120,7 @@ except Exception:
 numchecked = 0
 while True:
   try:
-    for comment in praw.helpers.comment_stream(r, 'all', limit=None, verbosity=0):
+    for comment in praw.helpers.comment_stream(r, 'image_linker_bot', limit=None, verbosity=0):
       if comment.id in already_seen:
         print "Already saw comment %s, skipping..." % (comment.id)
         continue
@@ -167,7 +167,7 @@ while True:
             if(not comment.is_root):
               parent = r.get_info(thing_id=comment.parent_id)
               subreddit = comment.submission.subreddit.display_name.lower()
-              if(parent.author == config['account'] and subreddit != config['account']):
+              if(parent.author.name == config['account']['username'] and subreddit != config['account']):
                 print "Sending warning to %s for reply-reply..." % (comment.author)
                 r.send_message(comment.author,'I\'m glad you like me, but...',config['bot']['toomuch'],raise_captcha_exception=True)
                 continue
