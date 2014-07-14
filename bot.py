@@ -12,6 +12,7 @@ import random
 import collections
 import pickle
 import signal
+from util import success, warn, log, fail
 
 def load_imagelist(config):
   matchlist = {}
@@ -53,6 +54,78 @@ def form_reply(link_list):
   lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
   reply = "\n".join(lines) + "\n\n" + config['bot']['footer']
   return reply
+
+def cleanup():
+  global last_cleaned
+
+  if(last_cleaned and last_cleaned > (time.time() - config['bot']['cleanup_time'])):
+    return
+
+  subreddit_scores = {}
+  last_cleaned = time.time()
+
+  # Comment deletion taken straight from autowikibot
+  # No need to reinvent the wheel
+  log("COMMENT SCORE CHECK CYCLE STARTED")
+  user = r.get_redditor(config['account']['username'])
+  total = 0
+  upvoted = 0
+  unvoted = 0
+  downvoted = 0
+  deleted = 0
+  for c in user.get_comments(limit=None):
+    
+    if len(str(c.score)) == 4:
+      spaces = ""
+    if len(str(c.score)) == 3:
+      spaces = " "
+    if len(str(c.score)) == 2:
+      spaces = "  "
+    if len(str(c.score)) == 1:
+      spaces = "   "
+    
+    #Keep track of our votes
+    sub = c.subreddit.display_name
+    if(sub not in subreddit_scores):
+      subreddit_scores[sub] = 0
+    subreddit_scores[sub] += c.score
+
+    total = total + 1
+
+    if c.score < 1 or sub.lower() in bans:
+      c.delete()
+      print "\033[1;41m%s%s\033[1;m"%(spaces,c.score),
+      deleted = deleted + 1
+      downvoted = downvoted + 1
+    elif c.score > 10:
+      print "\033[1;32m%s%s\033[1;m"%(spaces,c.score),
+      upvoted = upvoted + 1
+    elif c.score > 1:
+      print "\033[1;34m%s%s\033[1;m"%(spaces,c.score),
+      upvoted = upvoted + 1
+    elif c.score > 0:
+      print "\033[1;30m%s%s\033[1;m"%(spaces,c.score),
+      unvoted = unvoted + 1
+
+    sys.stdout.flush()
+          
+  print ("")
+  log("COMMENT SCORE CHECK CYCLE COMPLETED")
+  urate = round(upvoted / float(total) * 100)
+  nrate = round(unvoted / float(total) * 100)
+  drate = round(downvoted / float(total) * 100)
+  warn("Upvoted:      %s\t%s\b\b %%"%(upvoted,urate))
+  warn("Unvoted       %s\t%s\b\b %%"%(unvoted,nrate))
+  warn("Downvoted:    %s\t%s\b\b %%"%(downvoted,drate))
+  warn("Total:        %s"%total)
+
+  try:
+    ss = open("subreddit_scores.tsv","w")
+    for sr, score in subreddit_scores.iteritems():
+      ss.write("%s\t%d\n" % (sr, score)) 
+    ss.close()
+  except Exception:
+    warn("Failed to write subreddit scores")
 
 def signal_handler(signum, frame):
   if(signum == signal.SIGHUP):
@@ -117,10 +190,15 @@ try:
 except Exception:
   already_seen = collections.deque(maxlen=config['bot']['seen_len'])
 
+global last_cleaned
+last_cleaned = 0
+
 numchecked = 0
 while True:
   try:
-    for comment in praw.helpers.comment_stream(r, 'image_linker_bot', limit=None, verbosity=0):
+    for comment in praw.helpers.comment_stream(r, 'all', limit=None, verbosity=0):
+      cleanup()
+
       if comment.id in already_seen:
         print "Already saw comment %s, skipping..." % (comment.id)
         continue
@@ -136,7 +214,7 @@ while True:
         matches = maybeimage.findall(comment.body)
         if len(matches):
           #Don't post in bot-banned subreddits
-          subreddit = comment.submission.subreddit.display_name.lower()
+          subreddit = comment.subreddit.display_name.lower()
           if subreddit in bans:
             print "Skipping banned subreddit %s" % (subreddit)
             continue
@@ -169,7 +247,7 @@ while True:
           if len(commentlinks):
             if(not comment.is_root):
               parent = r.get_info(thing_id=comment.parent_id)
-              subreddit = comment.submission.subreddit.display_name.lower()
+              subreddit = comment.subreddit.display_name.lower()
               if(parent.author.name == config['account']['username'] and subreddit != config['account']):
                 print "Sending warning to %s for reply-reply..." % (comment.author)
                 r.send_message(comment.author,'I\'m glad you like me, but...',config['bot']['toomuch'],raise_captcha_exception=True)
