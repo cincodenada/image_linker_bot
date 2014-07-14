@@ -109,7 +109,7 @@ load_settings()
 signal.signal(signal.SIGHUP,signal_handler)
 
 ext_list = '|'.join(config['bot']['extensions'])
-maybeimage = re.compile(r'(?:^|\s)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
+maybeimage = re.compile(r'(^|\s|\^)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
 #Load already-checked queue
 try:
@@ -142,12 +142,12 @@ while True:
             continue
 
           #Don't reply to self, just in case...
-          if comment.author == config['account']['username']:
+          if comment.author.name == config['account']['username']:
             continue
 
           for match in matches:
             #Add the match to the list if it's not a dup
-            (key, ext) = match
+            (prefix, key, ext) = match
             searchkey = key.lower()
             if searchkey not in foundkeys:
               if searchkey in imagemap:
@@ -159,7 +159,10 @@ while True:
                   urls = imagemap[searchkey]
 
                 foundkeys.append(searchkey)
-                commentlinks["%s.%s" % (key,ext)] = random.choice(urls)
+                linktext = "%s.%s" % (key,ext)
+                if(prefix == '^'):
+                  linktext = '^' + linktext
+                commentlinks[linktext] = random.choice(urls)
               else:
                 print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
           
