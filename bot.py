@@ -13,6 +13,7 @@ import collections
 import pickle
 import signal
 from util import success, warn, log, fail
+import shutil
 
 def load_imagelist(config):
   matchlist = {}
@@ -73,6 +74,8 @@ def cleanup():
   unvoted = 0
   downvoted = 0
   deleted = 0
+  del_list = []
+          
   for c in user.get_comments(limit=None):
     
     if len(str(c.score)) == 4:
@@ -92,7 +95,8 @@ def cleanup():
 
     total = total + 1
 
-    if c.score < 1 or sub.lower() in bans:
+    if c.score < 1: # or sub.lower() in bans:
+      del_list.append((sub.lower(), c.score, c.permalink))
       c.delete()
       print "\033[1;41m%s%s\033[1;m"%(spaces,c.score),
       deleted = deleted + 1
@@ -108,7 +112,7 @@ def cleanup():
       unvoted = unvoted + 1
 
     sys.stdout.flush()
-          
+
   print ("")
   log("COMMENT SCORE CHECK CYCLE COMPLETED")
   urate = round(upvoted / float(total) * 100)
@@ -120,11 +124,16 @@ def cleanup():
   warn("Total:        %s"%total)
 
   try:
-    ss = open("subreddit_scores.tsv","w")
+    ss = open("subreddit_scores.%d.tsv" % (time.time()),"w")
     for sr, score in subreddit_scores.iteritems():
       ss.write("%s\t%d\n" % (sr, score)) 
     ss.close()
-  except Exception:
+    dl = open("deleted_list.tsv","a")
+    for cols in del_list:
+      dl.write("\t".join(map(str, cols)) + "\n")
+    dl.close()
+  except Exception, e:
+    warn(e)
     warn("Failed to write subreddit scores")
 
 def signal_handler(signum, frame):
@@ -162,6 +171,8 @@ def load_settings():
   imagemap = load_imagelist(imageconf)
 
   markdown = print_imagelist(imageconf)
+
+  shutil.copy('imagelist.md','imagelist.previous.md')
   mdf = open('imagelist.md','w')
   mdf.write(markdown)
   mdf.close()
