@@ -193,7 +193,7 @@ load_settings()
 signal.signal(signal.SIGHUP,signal_handler)
 
 ext_list = '|'.join(config['bot']['extensions'])
-maybeimage = re.compile(r'(^|\s|\^)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
+maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
 #Load already-checked queue
 try:
@@ -249,8 +249,8 @@ while True:
 
                 foundkeys.append(searchkey)
                 linktext = "%s.%s" % (key,ext)
-                if(prefix == '^'):
-                  linktext = '^' + linktext
+                if(len(prefix.strip()) > 0):
+                  linktext = prefix + linktext
                 commentlinks[linktext] = random.choice(urls)
               else:
                 print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
@@ -259,7 +259,7 @@ while True:
             if(not comment.is_root):
               parent = r.get_info(thing_id=comment.parent_id)
               subreddit = comment.subreddit.display_name.lower()
-              if(parent.author.name == config['account']['username'] and subreddit != config['account']):
+              if(parent.author.name == config['account']['username'] and subreddit != config['account']['username']):
                 print "Sending warning to %s for reply-reply..." % (comment.author)
                 r.send_message(comment.author,'I\'m glad you like me, but...',config['bot']['toomuch'],raise_captcha_exception=True)
                 continue
