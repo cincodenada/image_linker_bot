@@ -220,7 +220,7 @@ while True:
           for match in matches:
             #Add the match to the list if it's not a dup
             (prefix, key, ext) = match
-            searchkey = key.lower()
+            searchkey = key.lower().replace('_','')
             (urls, imagekey) = imagemap.get(searchkey, ext)
             if urls:
               if imagekey not in foundkeys:
