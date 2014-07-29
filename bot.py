@@ -19,10 +19,12 @@ from joelbot import JoelBot
 class ImageMap:
   as_dict = {}
   as_tuples = []
+  hidden_keys = []
 
   def __init__(self, config):
     self.images = config['images']
     self.aliases = config['aliases']
+    self.hidden_keys = config['hidden']
 
   def get(self, searchkey):
     if searchkey in self.get_dict():
@@ -54,7 +56,9 @@ class ImageMap:
 
   def get_tuples(self):
     if(len(self.as_tuples) == 0):
+      hidden_set = set(self.hidden_keys)
       for key, urls in self.images.iteritems():
+        if key in self.hidden_keys: continue
         keylist = [key]
         if(not isinstance(urls, list)):
           urls = [urls]
@@ -62,14 +66,14 @@ class ImageMap:
           aliases = self.aliases[key]
           if(not isinstance(aliases, list)):
             aliases = [aliases]
-          keylist += aliases
+          keylist += list(set(aliases) - hidden_set)
         
         self.as_tuples.append((keylist, urls))
 
     return self.as_tuples
 
   def num_keys(self):
-    return len(self.get_dict().keys())
+    return len(self.get_dict().keys()) - len(self.hidden_keys)
 
   def num_images(self):
     return sum([1 if (type(l) is str) else len(l) for l in self.images.itervalues()])
