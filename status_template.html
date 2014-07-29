@@ -17,7 +17,7 @@
             a:hover {
                 background: yellow;
             }
-            #popover {
+            #popover, #gfypopover {
                 position: absolute;
                 z-index: 5;
             }
@@ -25,9 +25,12 @@
     </head>
     <body>
         <p>${config['account']['username']} was last restarted at ${last_restarted.strftime('%I:%m%p on %b %d, %Y')}.</p>
-        <p>It knows ${num_keys} phrases that map to ${num_images} images, as follows:</p>
+        <p>It currently knows about ${num_images} images that are triggered by a total of ${num_keys} phrases, as follows:</p>
         <p>
             <img id="popover" style="display: none" src=""/>
+            <div id="gfypopover" style="display: none">
+                <img/>
+            </div>
             <table id="imagetable">
                 <thead>
                     <tr>
@@ -51,6 +54,7 @@
         </p>
         <script type="text/javascript">
             var popover = document.getElementById('popover');
+            var gfypop = document.getElementById('gfypopover');
             var lastimg;
             document.getElementById('imagetable').addEventListener(
                 'mouseover',
@@ -58,11 +62,29 @@
                     if(evt.target.tagName == 'A' && lastimg != evt.target.href) {
                         //Hide the image, switch the src, position, and reshow
                         popover.style.display = 'none';
-                        lastimg = popover.src = evt.target.href;
+                        gfypop.style.display = 'none';
+                        lastimg = evt.target.href;
+                        lastpart = lastimg.split('/').pop();
+                        if(lastpart.indexOf('.') == -1) {
+                            gfyelm = document.createElement('img');
+                            gfyelm.setAttribute('data-id',lastpart);
+                            while (gfypop.hasChildNodes()) {
+                                gfypop.removeChild(gfypop.lastChild);
+                            }
+                            gfypop.appendChild(gfyelm);
+                            var gfy = new gfyObject(gfyelm);
+                            gfy.init();
+                            curelm = gfypop;
+                        } else {
+                            popover.src = lastimg;
+                            popover.className = "";
+                            popover.removeAttribute('data-id');
+                            curelm = popover;
+                        }
                         curpos = evt.target.actualPos();
-                        popover.style.top = curpos.top;
-                        popover.style.left = curpos.left + evt.target.clientWidth;
-                        popover.style.display = 'block';
+                        curelm.style.top = curpos.top;
+                        curelm.style.left = curpos.left + evt.target.clientWidth;
+                        curelm.style.display = 'block';
                     }
                 }
             );
@@ -88,6 +110,14 @@
                 }
             );            
             */
+        </script>
+        <script>
+         (function(d, t) {
+            var g = d.createElement(t),
+                s = d.getElementsByTagName(t)[0];
+            g.src = 'http://assets.gfycat.com/js/gfyajax-0.517d.js';
+            s.parentNode.insertBefore(g, s);
+        }(document, 'script'));
         </script>
     </body>
 </html>
