@@ -132,6 +132,15 @@ class JoelBot:
       warn(e)
       warn("Failed to write subreddit scores")
 
+  def get_template(self):
+    if('status_template' in self.config['bot']):
+      template = self.config['bot']['status_template']
+      if(template.find('\n') == -1):
+        template = open(template, 'r').read()
+      return template
+    else:
+      return '<html><head><title>JoelBot</title></head><body>No template found</body></html>'
+
 class UnseenComments:
   def __init__(self, r, subreddit, maxlen=1000, state_file='seen.pickle'):
     self.r = r

@@ -2,6 +2,7 @@
 # vim: sw=2 ts=2 sts=2 et :
 import praw
 import time
+from datetime import datetime
 import re 
 import sys
 import argparse
@@ -11,6 +12,7 @@ import random
 import collections
 import signal
 import shutil
+from jinja2 import Template
 
 from joelbot import JoelBot
 
@@ -68,6 +70,18 @@ def cleanup():
   last_cleaned = time.time()
   return bot.cleanup()
 
+def generate_statuspage(bot):
+  global imagemap
+  t = Template(bot.get_template())
+  f = open('status.html', 'w')
+  t_data = {
+    'last_restarted': datetime.fromtimestamp(time.time()),
+    'config': bot.config,
+    'num_keys': len(imagemap.keys()),
+    'num_images': sum([0 if (type(l) is str) else len(l) for l in imagemap.itervalues()]),
+  }
+  f.write(t.render(t_data))
+
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
 
 global bot
@@ -96,6 +110,8 @@ sys.stdout.flush()
 
 ext_list = '|'.join(bot.config['bot']['extensions'])
 maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
+
+generate_statuspage(bot)
 
 numchecked = 0
 while True:

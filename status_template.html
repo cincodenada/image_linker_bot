@@ -1,0 +1,9 @@
+<html>
+    <head>
+        <title>{{config['account']['username']}} status</title>
+    </head>
+    <body>
+        <p>{{config['account']['username']}} was last restarted at {{last_restarted.strftime('%I:%m%p on %b %d, %Y')}}.</p>
+        <p>It knows {{num_keys}} phrases and {{num_images}} images</p>
+    </body>
+</html>
