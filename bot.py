@@ -21,12 +21,13 @@ class ImageMap:
   as_tuples = []
   hidden_keys = []
 
-  def __init__(self, config):
+  def __init__(self, config, anim_list = []):
     self.images = config['images']
     self.aliases = config['aliases']
     self.hidden_keys = config['hidden']
+    self.anim_list = anim_list
 
-  def get(self, searchkey):
+  def get(self, searchkey, matchext = ''):
     if searchkey in self.get_dict():
       urls = self.get_dict()[searchkey]
       #Follow aliases
@@ -34,9 +35,48 @@ class ImageMap:
         searchkey = urls.lower()
         urls = self.get_dict()[searchkey]
 
+      if matchext:
+        urls = self.get_closest(urls, matchext)
+
       return (urls, searchkey)
     else:
       return (False, False)
+
+  def get_closest(self, urls, ext):
+    is_anim = (ext in self.anim_list)
+
+    good_urls = []
+    great_urls = []
+    for url in urls:
+      parts = url.split('/')
+      endparts = parts.pop().rsplit('.', 1)
+      if(len(endparts) == 1):
+        urlext = 'gfy' #Gfycat can't match any extensions
+      else:
+        urlext = endparts[-1]
+
+      #If we're gfycat or in the list, we're animated
+      urlanim = (urlext in self.anim_list)
+
+      #If we match, add to a better list
+      if(urlanim == is_anim):
+        if(urlext == ext):
+          #If it's an exact match, add it to the greats
+          great_urls.append(url)
+        else:
+          #Otherwise it goes in the goods
+          if(urlext == 'gfy'):
+            #Gfy can't mess around with extensions
+            good_urls.append(url)
+          else:
+            good_urls.append('%s/%s.%s' % ('/'.join(parts), endparts[0], ext))
+
+    if(len(great_urls)):
+      return great_urls
+    elif(len(good_urls)):
+      return good_urls
+    else:
+      return urls
 
   def get_dict(self):
     if(len(self.as_dict.keys()) == 0):
@@ -136,7 +176,7 @@ signal.signal(signal.SIGHUP,signal_handler)
 
 #Load image map
 imageconf = yaml.load(open('imagelist.yaml'))
-imagemap = ImageMap(imageconf)
+imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'])
 
 markdown = imagemap.get_formatted()
 
@@ -149,7 +189,7 @@ print "Loaded image map:"
 pprint(imagemap.get_dict())
 sys.stdout.flush()
 
-ext_list = '|'.join(bot.config['bot']['extensions'])
+ext_list = '|'.join(bot.config['bot']['extensions'] + bot.config['bot']['animated_extensions'])
 maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
 generate_statuspage(bot)
@@ -175,13 +215,15 @@ while True:
             #Add the match to the list if it's not a dup
             (prefix, key, ext) = match
             searchkey = key.lower()
-            (urls, imagekey) = imagemap.get(searchkey)
+            (urls, imagekey) = imagemap.get(searchkey, ext)
             if urls:
               if imagekey not in foundkeys:
                 foundkeys.append(imagekey)
+
                 linktext = "%s.%s" % (key,ext)
                 if(len(prefix.strip()) > 0):
                   linktext = prefix + linktext
+
                 commentlinks[linktext] = random.choice(urls)
             else:
               print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
