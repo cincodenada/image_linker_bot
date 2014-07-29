@@ -12,45 +12,79 @@ import random
 import collections
 import signal
 import shutil
-from jinja2 import Template
+from mako.template import Template
 
 from joelbot import JoelBot
 
-def load_imagelist(config):
-  matchlist = {}
-  for key, urls in config['images'].iteritems():
-    if(not isinstance(urls, list)):
-      urls = [urls]
-    matchlist[key] = urls
+class ImageMap:
+  as_dict = {}
+  as_tuples = []
 
-  for key, aliases in config['aliases'].iteritems():
-    if(not isinstance(aliases, list)):
-      aliases = [aliases]
+  def __init__(self, config):
+    self.images = config['images']
+    self.aliases = config['aliases']
 
-    for alias in aliases:
-      matchlist[alias] = key
+  def get(self, searchkey):
+    if searchkey in self.get_dict():
+      urls = self.get_dict()[searchkey]
+      #Follow aliases
+      if not isinstance(urls, list):
+        searchkey = urls.lower()
+        urls = self.get_dict()[searchkey]
 
-  return matchlist
+      return (urls, searchkey)
+    else:
+      return (false, false)
 
-def print_imagelist(config, format = 'markdown'):
-  headers = {
-    'markdown': "|Triggers|Responses|\n|:-|:-|\n"
-  }
-  imagelist = headers[format];
-  for key, urls in config['images'].iteritems():
-    keylist = [key]
-    if(not isinstance(urls, list)):
-      urls = [urls]
-    if(key in config['aliases']):
-      aliases = config['aliases'][key]
-      if(not isinstance(aliases, list)):
-        aliases = [aliases]
-      keylist += aliases
-    
+  def get_dict(self):
+    if(len(self.as_dict.keys()) == 0):
+      for key, urls in self.images.iteritems():
+        if(not isinstance(urls, list)):
+          urls = [urls]
+        self.as_dict[key] = urls
+
+      for key, aliases in self.aliases.iteritems():
+        if(not isinstance(aliases, list)):
+          aliases = [aliases]
+
+        for alias in aliases:
+          self.as_dict[alias] = key
+
+    return self.as_dict
+
+  def get_tuples(self):
+    if(len(self.as_tuples) == 0):
+      for key, urls in self.images.iteritems():
+        keylist = [key]
+        if(not isinstance(urls, list)):
+          urls = [urls]
+        if(key in self.aliases):
+          aliases = self.aliases[key]
+          if(not isinstance(aliases, list)):
+            aliases = [aliases]
+          keylist += aliases
+        
+        self.as_tuples.append((keylist, urls))
+
+    return self.as_tuples
+
+  def num_keys(self):
+    return len(self.get_dict().keys())
+
+  def num_images(self):
+    return sum([1 if (type(l) is str) else len(l) for l in self.images.itervalues()])
+
+  def get_formatted(self, format='markdown'):
+    headers = {
+      'markdown': "|Triggers|Responses|\n|:-|:-|\n"
+    }
+    imagelist = headers[format];
+      
     if(format == 'markdown'):
-       imagelist += "|%s|%s|\n" % (', '.join(keylist), ' '.join(['[%d](%s)' % (i+1,url) for i, url in enumerate(urls)]))
+      for keylist, urls in self.get_tuples():
+        imagelist += "|%s|%s|\n" % (', '.join(keylist), ' '.join(['[%d](%s)' % (i+1,url) for i, url in enumerate(urls)]))
 
-  return imagelist
+    return imagelist
 
 def form_reply(link_list):
   lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
@@ -77,10 +111,10 @@ def generate_statuspage(bot):
   t_data = {
     'last_restarted': datetime.fromtimestamp(time.time()),
     'config': bot.config,
-    'num_keys': len(imagemap.keys()),
-    'num_images': sum([0 if (type(l) is str) else len(l) for l in imagemap.itervalues()]),
+    'num_keys': imagemap.num_keys(),
+    'num_images': imagemap.num_images(),
   }
-  f.write(t.render(t_data))
+  f.write(t.render(**t_data))
 
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
 
@@ -95,9 +129,9 @@ signal.signal(signal.SIGHUP,signal_handler)
 
 #Load image map
 imageconf = yaml.load(open('imagelist.yaml'))
-imagemap = load_imagelist(imageconf)
+imagemap = ImageMap(imageconf)
 
-markdown = print_imagelist(imageconf)
+markdown = imagemap.get_formatted()
 
 shutil.copy('imagelist.md','imagelist.previous.md')
 mdf = open('imagelist.md','w')
@@ -105,7 +139,7 @@ mdf.write(markdown)
 mdf.close()
 
 print "Loaded image map:"
-pprint(imagemap)
+pprint(imagemap.get_dict())
 sys.stdout.flush()
 
 ext_list = '|'.join(bot.config['bot']['extensions'])
@@ -134,22 +168,16 @@ while True:
             #Add the match to the list if it's not a dup
             (prefix, key, ext) = match
             searchkey = key.lower()
-            if searchkey not in foundkeys:
-              if searchkey in imagemap:
-                urls = imagemap[searchkey]
-                #Follow aliases
-                if not isinstance(urls, list):
-                  searchkey = urls.lower()
-                  if searchkey in foundkeys: continue
-                  urls = imagemap[searchkey]
-
-                foundkeys.append(searchkey)
+            (urls, imagekey) = imagemap.get(searchkey)
+            if urls:
+              if imagekey not in foundkeys:
+                foundkeys.append(imagekey)
                 linktext = "%s.%s" % (key,ext)
                 if(len(prefix.strip()) > 0):
                   linktext = prefix + linktext
                 commentlinks[linktext] = random.choice(urls)
-              else:
-                print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
+            else:
+              print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
           
           if len(commentlinks):
             if(not comment.is_root):
