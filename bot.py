@@ -113,6 +113,7 @@ def generate_statuspage(bot):
     'config': bot.config,
     'num_keys': imagemap.num_keys(),
     'num_images': imagemap.num_images(),
+    'imagelist': imagemap.get_tuples(),
   }
   f.write(t.render(**t_data))
 

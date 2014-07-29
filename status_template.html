@@ -1,9 +1,93 @@
 <html>
     <head>
-        <title>{{config['account']['username']}} status</title>
+        <title>${config['account']['username']} status</title>
+        <style>
+            table { border-collapse: collapse; }
+            th, td { 
+                border: 2px solid black; 
+                padding: 3px;
+                max-width: 13em;
+            }
+            a {
+                display: inline-block;
+                z-index: 10;
+                position: relative;
+                background: rgba(255,255,255,0.5);
+            }
+            a:hover {
+                background: yellow;
+            }
+            #popover {
+                position: absolute;
+                z-index: 5;
+            }
+        </style>
     </head>
     <body>
-        <p>{{config['account']['username']}} was last restarted at {{last_restarted.strftime('%I:%m%p on %b %d, %Y')}}.</p>
-        <p>It knows {{num_keys}} phrases and {{num_images}} images</p>
+        <p>${config['account']['username']} was last restarted at ${last_restarted.strftime('%I:%m%p on %b %d, %Y')}.</p>
+        <p>It knows ${num_keys} phrases that map to ${num_images} images, as follows:</p>
+        <p>
+            <img id="popover" style="display: none" src=""/>
+            <table id="imagetable">
+                <thead>
+                    <tr>
+                        <th>Triggers</th>
+                        <th>Images</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    % for keys, images in imagelist:
+                    <tr>
+                        <td>${', '.join(keys)}</td>
+                        <td>
+                            % for url in images:
+                            <a class="imagelink" href="${url}">[${loop.index + 1}]</a>
+                            % endfor
+                        </td>
+                    </tr>
+                    % endfor
+                </tbody>
+            </table>
+        </p>
+        <script type="text/javascript">
+            var popover = document.getElementById('popover');
+            var lastimg;
+            document.getElementById('imagetable').addEventListener(
+                'mouseover',
+                function(evt) {
+                    if(evt.target.tagName == 'A' && lastimg != evt.target.href) {
+                        //Hide the image, switch the src, position, and reshow
+                        popover.style.display = 'none';
+                        lastimg = popover.src = evt.target.href;
+                        curpos = evt.target.actualPos();
+                        popover.style.top = curpos.top;
+                        popover.style.left = curpos.left + evt.target.clientWidth;
+                        popover.style.display = 'block';
+                    }
+                }
+            );
+            
+            Element.prototype.actualPos = function() {
+                var top = this.offsetTop;
+                var left = this.offsetLeft;
+                var curp = this;
+                while(curp = curp.offsetParent) {
+                    top += curp.offsetTop;
+                    left += curp.offsetLeft;
+                }
+                return {'top': top, 'left': left}
+            }
+            /*
+            document.getElementById('imagetable').addEventListener(
+                'mouseout',
+                function(evt) {
+                    if(evt.target.tagName == 'A' && lastimg != evt.target.href) {
+                        popover.src = '';
+                        popover.style.display = 'none';
+                    }
+                }
+            );            
+            */
+        </script>
     </body>
 </html>
