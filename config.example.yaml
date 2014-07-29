@@ -18,3 +18,4 @@ bot:
         - avi
         - tiff
         - tif
+    status_template: status_template.html

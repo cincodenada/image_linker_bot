@@ -90,9 +90,11 @@ class ImageMap:
 
     return imagelist
 
-def form_reply(link_list):
+def form_reply(link_list, withfooter = True):
   lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
-  reply = "\n".join(lines) + "\n\n" + bot.config['bot']['footer']
+  reply = "\n".join(lines)
+  if(withfooter):
+    reply += "\n\n" + bot.config['bot']['footer']
   return reply
 
 def signal_handler(signum, frame):
@@ -190,7 +192,22 @@ while True:
               subreddit = comment.subreddit.display_name.lower()
               if(parent.author.name == bot.config['account']['username'] and subreddit != bot.config['account']['username']):
                 print "Sending warning to %s for reply-reply..." % (comment.author)
-                bot.r.send_message(comment.author,'I\'m glad you like me, but...',bot.config['bot']['toomuch'],raise_captcha_exception=True)
+
+                #Always with the plurals
+                plural = 'are the images'
+                if(len(commentlinks) > 1):
+                  plural = 'are the images'
+                else:
+                  plural = 'is the image'
+
+                #Construct our message
+                message = 'Here %s you wanted: %s\n\n%s' % (
+                  plural,
+                  form_reply(commentlinks, False),
+                  bot.config['bot']['toomuch']
+                )
+
+                bot.r.send_message(comment.author,'I\'m glad you like me, but...',message,raise_captcha_exception=True)
                 continue
 
             replytext = form_reply(commentlinks)
