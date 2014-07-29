@@ -21,4 +21,9 @@ bot:
     animated_extensions:
         - gif
         - avi
+    switchable_extensions:
+        - jpeg
+        - jpg
+        - gif
+        - png
     status_template: status_template.html

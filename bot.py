@@ -21,11 +21,12 @@ class ImageMap:
   as_tuples = []
   hidden_keys = []
 
-  def __init__(self, config, anim_list = []):
+  def __init__(self, config, anim_list = [], switch_list = []):
     self.images = config['images']
     self.aliases = config['aliases']
     self.hidden_keys = config['hidden']
     self.anim_list = anim_list
+    self.switch_list = switch_list
 
   def get(self, searchkey, matchext = ''):
     if searchkey in self.get_dict():
@@ -45,8 +46,7 @@ class ImageMap:
   def get_closest(self, urls, ext):
     is_anim = (ext in self.anim_list)
 
-    good_urls = []
-    great_urls = []
+    priority_list = [[] for i in range(4)]
     for url in urls:
       parts = url.split('/')
       endparts = parts.pop().rsplit('.', 1)
@@ -55,6 +55,9 @@ class ImageMap:
       else:
         urlext = endparts[-1]
 
+      #We use this a couple times below, might as well make it now
+      swapped = '%s/%s.%s' % ('/'.join(parts), endparts[0], ext)
+
       #If we're gfycat or in the list, we're animated
       urlanim = (urlext in self.anim_list)
 
@@ -62,21 +65,24 @@ class ImageMap:
       if(urlanim == is_anim):
         if(urlext == ext):
           #If it's an exact match, add it to the greats
-          great_urls.append(url)
+          priority_list[0].append(url)
         else:
-          #Otherwise it goes in the goods
-          if(urlext == 'gfy'):
-            #Gfy can't mess around with extensions
-            good_urls.append(url)
+          if(ext in self.switch_list and urlext in self.switch_list):
+            #Otherwise, if we can switch, that's still good
+            priority_list[1].append(swapped)
           else:
-            good_urls.append('%s/%s.%s' % ('/'.join(parts), endparts[0], ext))
+            #If no switching, at least animation state matches
+            priority_list[2].append(url)
+      elif(ext in self.switch_list and urlext in self.switch_list):
+        priority_list[3].append(swapped)
 
-    if(len(great_urls)):
-      return great_urls
-    elif(len(good_urls)):
-      return good_urls
-    else:
-      return urls
+    #Use the first list that has any entries
+    for try_list in priority_list:
+      if(len(try_list)):
+        return try_list
+
+    #Fall back to the full list
+    return urls
 
   def get_dict(self):
     if(len(self.as_dict.keys()) == 0):
@@ -176,7 +182,7 @@ signal.signal(signal.SIGHUP,signal_handler)
 
 #Load image map
 imageconf = yaml.load(open('imagelist.yaml'))
-imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'])
+imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'], bot.config['bot']['switchable_extensions'])
 
 markdown = imagemap.get_formatted()
 
