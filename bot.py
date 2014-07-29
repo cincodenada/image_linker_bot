@@ -36,7 +36,7 @@ class ImageMap:
 
       return (urls, searchkey)
     else:
-      return (false, false)
+      return (False, False)
 
   def get_dict(self):
     if(len(self.as_dict.keys()) == 0):
@@ -209,5 +209,5 @@ while True:
     print "Shutting down after scanning %d comments..." % (numchecked)
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
-# except Exception, e:
-#   pprint(e)
+  except Exception, e:
+    pprint(e)
