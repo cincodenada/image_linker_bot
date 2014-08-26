@@ -12,7 +12,7 @@ import sys
 class JoelBot:
   def __init__(self, subreddit, config_file='config.yaml'):
     #Load config and set up
-    print "Logging in..."
+    self.log("Logging in...")
     self.config = yaml.load(open(config_file))
     self.r = praw.Reddit(self.config['bot']['useragent'])
     self.r.login(self.config['account']['username'],self.config['account']['password'])
@@ -22,13 +22,25 @@ class JoelBot:
 
     self.load_settings()
 
+  def log(self, format, params=None, stderr=False,newline=True):
+    prefix = time.strftime('%Y-%m-%d %H:%M:%S')
+    logline = prefix + " " + (format if params is None else (format % params))
+    if(newline and stderr):
+      logline += "\n"
+
+    if(stderr):
+      sys.stderr.write(logline)
+    else:
+      print(logline)
+    
+
   def load_settings(self):
-    print "Reloading config..."
+    self.log("Reloading config...")
     sys.stdout.flush()
     self.config = yaml.load(open('config.yaml'))
 
     #Load banlist
-    print "Loading banlist..."
+    self.log("Loading banlist...")
     sys.stdout.flush()
     bottiquette = self.r.get_wiki_page('Bottiquette', 'robots_txt_json')
     banlist = json.loads(bottiquette.content_md)
@@ -40,13 +52,13 @@ class JoelBot:
         if not (x.strip() == '' or x.startswith('#'))]
     
     self.bans = [x.strip().lower() for x in (btqban + mybans)]
-    print "Ignoring subreddits: %s" % (', '.join(self.bans))
+    self.log("Ignoring subreddits: %s",(', '.join(self.bans)))
 
   def should_ignore(self, comment):
     #Don't post in bot-banned subreddits
     subreddit = comment.subreddit.display_name.lower()
     if subreddit in self.bans:
-      print "Skipping banned subreddit %s" % (subreddit)
+      self.log("Skipping banned subreddit %s",(subreddit))
       return True
 
     #Don't reply to self, just in case...

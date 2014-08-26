@@ -194,7 +194,7 @@ mdf = open('imagelist.md','w')
 mdf.write(markdown)
 mdf.close()
 
-print "Loaded image map:"
+bot.log("Loaded image map:")
 pprint(imagemap.get_dict())
 sys.stdout.flush()
 
@@ -211,7 +211,7 @@ while True:
 
       if hasattr(comment,'body'):
         numchecked += 1
-        sys.stderr.write("\rChecked %d comments..." % (numchecked))
+        bot.log("\rChecked %d comments...",(numchecked),True,newline=False)
 
         commentlinks = collections.OrderedDict()
         foundkeys = []
@@ -235,14 +235,14 @@ while True:
 
                 commentlinks[linktext] = random.choice(urls)
             else:
-              print u"\nPossible new image for %s\n%s" % (comment.permalink, ' '.join(match))
+              bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, ' '.join(match)))
           
           if len(commentlinks):
             if(not comment.is_root):
               parent = bot.r.get_info(thing_id=comment.parent_id)
               subreddit = comment.subreddit.display_name.lower()
               if(parent.author.name == bot.config['account']['username'] and subreddit != bot.config['account']['username']):
-                print "Sending warning to %s for reply-reply..." % (comment.author)
+                bot.log("Sending warning to %s for reply-reply...",(comment.author))
 
                 #Always with the plurals
                 plural = 'are the images'
@@ -263,18 +263,18 @@ while True:
 
             replytext = form_reply(commentlinks)
             try:
-              print "Commenting on %s (%s)" % (comment.permalink, ', '.join(commentlinks.keys()))
+              bot.log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
               comment.reply(replytext)
             except praw.errors.RateLimitExceeded, e:
-              print "Rate limit exceeded, sleeping %d seconds and trying again..." % (e.sleep_time)
+              bot.log("Rate limit exceeded, sleeping %d seconds and trying again...",(e.sleep_time))
               time.sleep(e.sleep_time)
-              print "Re-commenting on %s" % (comment.permalink)
+              bot.log("Re-commenting on %s",(comment.permalink))
               comment.reply(replytext)
 
       sys.stdout.flush()
             
   except KeyboardInterrupt:
-    print "Shutting down after scanning %d comments..." % (numchecked)
+    bot.log("Shutting down after scanning %d comments...",(numchecked))
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
   except Exception, e:
