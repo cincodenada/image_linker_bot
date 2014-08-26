@@ -10,11 +10,16 @@ from util import success, warn, log, fail
 import sys
 
 class JoelBot:
-  def __init__(self, subreddit, config_file='config.yaml'):
+  def __init__(self, subreddit, config_file='config.yaml', useragent = None):
     #Load config and set up
     self.log("Logging in...")
     self.config = yaml.load(open(config_file))
-    self.r = praw.Reddit(self.config['bot']['useragent'])
+
+    if useragent is None: 
+      useragent = self.config['bot']['useragent']['default']
+    else:
+      useragent = self.config['bot']['useragent'][useragent]
+    self.r = praw.Reddit(useragent)
     self.r.login(self.config['account']['username'],self.config['account']['password'])
 
     self.comment_stream = UnseenComments(self.r, subreddit, self.config['bot']['seen_len'])

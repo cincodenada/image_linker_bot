@@ -3,7 +3,8 @@ account:
     password: bot_password
 
 bot:
-    useragent: Sample bot by /u/yournamehere v0.0 at /r/botsubreddithere
+    useragent:
+        'default': Sample bot by /u/yournamehere v0.0 at /r/botsubreddithere
     footer: ^(Questions, comments, image suggestions? All are welcomed at /r/image_linker_bot)
     seen_len: 1000
     toomuch: |

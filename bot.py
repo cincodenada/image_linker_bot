@@ -148,15 +148,6 @@ def signal_handler(signum, frame):
   if(signum == signal.SIGHUP):
       load_settings()
 
-def cleanup():
-  global last_cleaned
-
-  if(last_cleaned and last_cleaned > (time.time() - bot.config['bot']['cleanup_time'])):
-    return
-
-  last_cleaned = time.time()
-  return bot.cleanup()
-
 def generate_statuspage(bot):
   global imagemap
   t = Template(bot.get_template())
@@ -173,11 +164,9 @@ def generate_statuspage(bot):
 parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.gif to actual images")
 
 global bot
-global last_cleaned
 global imagemap
 
 bot = JoelBot('ilb_test')
-last_cleaned = 0
 
 signal.signal(signal.SIGHUP,signal_handler)
 
@@ -207,7 +196,6 @@ numchecked = 0
 while True:
   try:
     for comment in bot.comment_stream:
-      cleanup()
 
       if hasattr(comment,'body'):
         numchecked += 1
