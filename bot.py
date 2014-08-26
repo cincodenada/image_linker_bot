@@ -184,9 +184,11 @@ signal.signal(signal.SIGHUP,signal_handler)
 #Load image map
 imageconf = yaml.load(open('imagelist.yaml'))
 imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'], bot.config['bot']['switchable_extensions'])
+shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
 
 markdown = imagemap.get_formatted()
 
+shutil.copy('imagelist.md','imagelist.%d.md' % (time.time()))
 shutil.copy('imagelist.md','imagelist.previous.md')
 mdf = open('imagelist.md','w')
 mdf.write(markdown)
