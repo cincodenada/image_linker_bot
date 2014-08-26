@@ -13,6 +13,7 @@ import collections
 import signal
 import shutil
 from mako.template import Template
+import traceback
 
 from joelbot import JoelBot
 
@@ -275,4 +276,4 @@ while True:
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
   except Exception, e:
-    pprint(e)
+    print traceback.format_exc()
