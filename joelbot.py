@@ -8,6 +8,11 @@ import pickle
 import collections
 from util import success, warn, log, fail
 import sys
+try:
+  from quantile import quantile
+  have_quantile = True
+except:
+  have_quantile = False
 
 class JoelBot:
   def __init__(self, subreddit, config_file='config.yaml', useragent = None):
@@ -88,6 +93,8 @@ class JoelBot:
     downvoted = 0
     deleted = 0
     del_list = []
+    total_score = 0
+    score_list = []
             
     for c in user.get_comments(limit=None):
       
@@ -107,6 +114,8 @@ class JoelBot:
       subreddit_scores[sub] += c.score
 
       total = total + 1
+      total_score += score
+      score_list.append(score)
 
       if c.score < 1: # or sub.lower() in self.bans:
         del_list.append((sub.lower(), c.score, c.permalink))
@@ -126,6 +135,7 @@ class JoelBot:
 
       sys.stdout.flush()
 
+    avg_score = float(total_score)/float(total) if total else 0
     print ("")
     log("COMMENT SCORE CHECK CYCLE COMPLETED")
     urate = round(upvoted / float(total) * 100)
@@ -135,6 +145,12 @@ class JoelBot:
     warn("Unvoted       %s\t%s\b\b %%"%(unvoted,nrate))
     warn("Downvoted:    %s\t%s\b\b %%"%(downvoted,drate))
     warn("Total:        %s"%total)
+    warn("Avg Score:    %f"%avg_score)
+    if have_quantile:
+      quantspots = [0.25,0.5,0.75]
+      score_list = sorted(score_list)
+      quant = [quantile(score_list, q, issorted=True) for q in quantspots]
+      warn("Quantiles:    %.2f-%.2f-%.2f"%tuple(quant))
 
     try:
       ss = open("subreddit_scores.%d.tsv" % (time.time()),"w")
