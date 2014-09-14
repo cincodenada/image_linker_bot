@@ -114,8 +114,8 @@ class JoelBot:
       subreddit_scores[sub] += c.score
 
       total = total + 1
-      total_score += score
-      score_list.append(score)
+      total_score += c.score
+      score_list.append(c.score)
 
       if c.score < 1: # or sub.lower() in self.bans:
         del_list.append((sub.lower(), c.score, c.permalink))
@@ -150,7 +150,9 @@ class JoelBot:
       quantspots = [0.25,0.5,0.75]
       score_list = sorted(score_list)
       quant = [quantile(score_list, q, issorted=True) for q in quantspots]
-      warn("Quantiles:    %.2f-%.2f-%.2f"%tuple(quant))
+      warn("Quantiles:    %.1f-%.1f-%.1f"%tuple(quant))
+
+    sys.stdout.flush()
 
     try:
       ss = open("subreddit_scores.%d.tsv" % (time.time()),"w")
