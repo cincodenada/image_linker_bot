@@ -6,7 +6,7 @@ import yaml
 import json
 import pickle
 import collections
-from util import success, warn, log, fail
+from util import success, warn, log, fail, function_timeout
 import sys
 try:
   from quantile import quantile
@@ -192,6 +192,7 @@ class UnseenComments:
   def __iter__(self):
     return self
 
+  @function_timeout(15)
   def next(self):
     next_comment = self.comment_stream.next()
     if next_comment.id in self.already_seen:
