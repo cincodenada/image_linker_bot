@@ -195,6 +195,7 @@ generate_statuspage(bot)
 numchecked = 0
 numsamples = 0
 maxsamples = 1000
+update_period = 100
 totaltime = 0
 while True:
   try:
@@ -265,8 +266,9 @@ while True:
       duration = time.time() - start
       totaltime += duration
       numsamples += 1
-      if(numsamples >= maxsamples):
+      if(numchecked % update_period == 0):
         bot.log("\rChecked %d comments...",(numchecked),True,newline=False)
+      if(numsamples >= maxsamples):
         bot.log("Average processing time of last %d comments: %.2f ms",(numsamples, totaltime/numsamples*1000))
         numsamples = 0
         totaltime = 0
