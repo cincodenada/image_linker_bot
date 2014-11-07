@@ -288,6 +288,9 @@ while True:
         totaltime = 0
       
       sys.stdout.flush()
+
+    # Maybe if we get to the end, we need to get more?
+    bot.refresh_comments()
             
   except KeyboardInterrupt:
     bot.log("Shutting down after scanning %d comments...",(numchecked))

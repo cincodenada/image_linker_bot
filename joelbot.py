@@ -176,6 +176,9 @@ class JoelBot:
     else:
       return '<html><head><title>JoelBot</title></head><body>No template found</body></html>'
 
+  def refresh_comments(self):
+    self.comment_stream.refresh_comments()
+
 class UnseenComments:
   def __init__(self, r, subreddit, maxlen=1000, state_file='seen.pickle'):
     self.r = r
