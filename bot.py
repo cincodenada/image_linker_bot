@@ -138,7 +138,15 @@ class ImageMap:
     return imagelist
 
 def form_reply(link_list, withfooter = True):
-  lines = ["[%s](%s)  " % keyval for keyval in link_list.iteritems()]
+  lines = []
+  for (text, link) in link_list.iteritems():
+    lines.append("[%s](%s)  " % (text, link))
+    (urls, peniskey) = imagemap.get('thatsapenis')
+    if(link in urls):
+      (revurl, revkey) = imagemap.get('thatsapenisreverse')
+      revurl = revurl[0]
+      lines.append("^(and, to fulfill the laws of reddit:) ^[%s](%s)  " % ('sinepastaht.gif', revurl))
+
   reply = "\n".join(lines)
   if(withfooter):
     reply += "\n\n" + bot.config['bot']['footer']
