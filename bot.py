@@ -197,8 +197,22 @@ numsamples = 0
 maxsamples = 1000
 update_period = 100
 totaltime = 0
+last_restart = time.time() - 10;
+sleep_secs = 5
 while True:
   try:
+    #Sanity check: sleep a bit before logging things
+    #Also some simple escalation: double sleep time if
+    #We restart too quickly
+    time_since_last_restart = time.time() - last_restart
+    if(time_since_last_restart < sleep_secs*2):
+      sleep_secs = sleep_secs*2
+      bot.log("Restarted too quickly, refreshing comments and backing off to %d seconds...", sleep_secs)
+    else:
+      sleep_secs = 5
+    time.sleep(sleep_secs)
+    bot.log("Starting comment stream...")
+    last_restart = time.time()
     for comment in bot.comment_stream:
       start = time.time();
 
@@ -280,4 +294,5 @@ while True:
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
   except Exception, e:
+    bot.log(u"Error!")
     print traceback.format_exc()
