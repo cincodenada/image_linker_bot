@@ -126,8 +126,9 @@ class ImageMap:
     return sum([1 if (type(l) is str) else len(l) for l in self.images.itervalues()])
 
   def get_formatted(self, format='markdown'):
+    datestr = time.strftime("%I:%M %p PST, %m/%d")
     headers = {
-      'markdown': "|Triggers|Responses|\n|:-|:-|\n"
+      'markdown': "Current list in use as of " + datestr + ":\n\n|Triggers|Responses|\n|:-|:-|\n"
     }
     imagelist = headers[format];
       
@@ -190,6 +191,14 @@ shutil.copy('imagelist.md','imagelist.previous.md')
 mdf = open('imagelist.md','w')
 mdf.write(markdown)
 mdf.close()
+
+#Update the post
+if(bot.config['bot']['imagethread']):
+  imagepost = bot.r.get_submission(submission_id=bot.config['bot']['imagethread'])
+  header = re.match(r'([\S\s]*)---',imagepost.selftext)
+  if(header):
+    header = header.group(1)
+    imagepost.edit("%s---\n%s" % (header, markdown))
 
 bot.log("Loaded image map:")
 pprint(imagemap.get_dict())
