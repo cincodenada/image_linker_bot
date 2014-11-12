@@ -7,13 +7,14 @@ import re
 import sys
 import argparse
 import yaml
-from pprint import pprint
+from pprint import pprint, pformat
 import random
 import collections
 import signal
 import shutil
 from mako.template import Template
 import traceback
+import inspect
 
 from joelbot import JoelBot
 
@@ -216,6 +217,7 @@ update_period = 100
 totaltime = 0
 last_restart = time.time() - 10;
 sleep_secs = 5
+max_sleep = 2**16
 while True:
   try:
     #Sanity check: sleep a bit before logging things
@@ -223,8 +225,18 @@ while True:
     #We restart too quickly
     time_since_last_restart = time.time() - last_restart
     if(time_since_last_restart < sleep_secs*2):
-      sleep_secs = sleep_secs*2
-      bot.log("Restarted too quickly, refreshing comments and backing off to %d seconds...", sleep_secs)
+      if(sleep_secs < max_sleep):
+        sleep_secs = sleep_secs*2
+
+      #Be safe here cause we can spin into disk-eating death if we die before sleeping
+      try:
+        bot.log("Restarted too quickly, refreshing comments and backing off to %d seconds...", sleep_secs)
+        if(comment and hasattr(comment, '__dict__')):
+          bot.log("Last comment: %s", pformat(comment.__dict__))
+        else:
+          bot.log("Last comment: %s", pformat(comment))
+      except Exception, e:
+        print traceback.format_exc()
     else:
       sleep_secs = 5
     time.sleep(sleep_secs)
