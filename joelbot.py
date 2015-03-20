@@ -6,6 +6,7 @@ import yaml
 import json
 import pickle
 import collections
+import sqlite3
 from util import success, warn, log, fail, function_timeout
 import sys
 try:
@@ -32,6 +33,9 @@ class JoelBot:
 
     self.load_settings()
 
+    self.db = CommentStore()
+    self.ignores = IgnoreList()
+
   def log(self, format, params=None, stderr=False,newline=True):
     prefix = time.strftime('%Y-%m-%d %H:%M:%S')
     logline = prefix + " " + (format if params is None else (format % params))
@@ -43,7 +47,6 @@ class JoelBot:
     else:
       print(logline)
     
-
   def load_settings(self):
     self.log("Reloading config...")
     sys.stdout.flush()
@@ -179,6 +182,29 @@ class JoelBot:
   def refresh_comments(self):
     self.comment_stream.refresh_comments()
 
+  def check_messages(self):
+    last_message = self.db.get_last_message()
+    last_tid = None if last_message is None else last_message['tid']
+    print last_tid
+    for m in self.r.get_inbox(place_holder=last_tid):
+      if(last_message is not None and m.created < last_message['sent']):
+        self.log("Found old message, stopping!")
+        break
+
+      if(self.db.add_message(m)):
+        print m
+        if(m.body in self.config['bot']['ignore_messages']):
+          self.ignores.ignore_sender(m)
+          if('ignore_reply' in self.config['bot']):
+            m.reply(self.config['bot']['ignore_reply'])
+        elif(m.body in self.config['bot']['unignore_messages']):
+          self.ignores.unignore_sender(m)
+          if('unignore_reply' in self.config['bot']):
+            m.reply(self.config['bot']['unignore_reply'])
+      else:
+        self.log("Found duplicate message, stopping!")
+        break
+
 class UnseenComments:
   def __init__(self, r, subreddit, maxlen=1000, state_file='seen.pickle'):
     self.r = r
@@ -217,3 +243,52 @@ class UnseenComments:
 
   def save_state(self):
     return pickle.dump(self.already_seen,open(self.state_file,'w'))
+
+class CommentStore():
+  def __init__(self):
+    self.conn = sqlite3.connect('joelbot.db')
+    self.conn.row_factory = sqlite3.Row
+    self.conn.isolation_level = None
+    self.c = self.conn.cursor()
+
+    self.c.execute('''CREATE TABLE IF NOT EXISTS inbox
+        (tid TEXT, subject TEXT, body TEXT, sender TEXT, sent INTEGER, seen INTEGER)''')
+    self.c.execute('''CREATE INDEX IF NOT EXISTS inbox_seen ON inbox(seen)''')
+    self.c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS inbox_id ON inbox(tid)''')
+
+  def add_message(self, m):
+    try:
+      self.c.execute('''INSERT INTO inbox VALUES(?,?,?,?,?,?)''', 
+          (m.name, m.subject, m.body, m.author.name, m.created, time.time()))
+      return True
+    except sqlite3.IntegrityError:
+      return False
+
+  def get_last_message(self):
+    self.c.execute('''SELECT tid FROM inbox ORDER BY seen DESC LIMIT 1''')
+    last_message = self.c.fetchone()
+    return last_message
+
+class IgnoreList():
+  def __init__(self):
+    self.conn = sqlite3.connect('joelbot.db')
+    self.conn.row_factory = sqlite3.Row
+    #Autocommit
+    self.conn.isolation_level = None
+    self.c = self.conn.cursor()
+
+    self.c.execute('''CREATE TABLE IF NOT EXISTS ignore
+        (username TEXT, request_id TEXT, ignore_date INTEGER)''')
+    self.c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS ignore_user ON ignore(username)''')
+
+  def ignore_sender(self, m):
+    self.c.execute('''INSERT OR REPLACE INTO ignore VALUES(?,?,?)''', 
+        (m.author, m.name, time.time()))
+
+  def unignore_sender(self, m):
+    self.c.execute('''DELETE FROM ignore WHERE username=?''', m.author)
+
+  def check_ignored(self, username):
+    self.c.execute('''SELECT FROM ignore WHERE username=? LIMIT 1''', username)
+    return (self.c.rowcount > 0)
+
