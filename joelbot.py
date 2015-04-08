@@ -53,7 +53,7 @@ class JoelBot:
     self.config = yaml.load(open('config.yaml'))
 
     #Load banlist
-    self.log("Loading banlist...")
+    self.log("Loading banlists...")
     sys.stdout.flush()
     bottiquette = self.r.get_wiki_page('Bottiquette', 'robots_txt_json')
     banlist = json.loads(bottiquette.content_md)
@@ -61,8 +61,9 @@ class JoelBot:
         banlist['posts-only'] +\
         banlist['permission'])
 
-    mybans = [x for x in list(open('blacklist.txt'))\
-        if not (x.strip() == '' or x.startswith('#'))]
+    mybans = self.r.get_wiki_page(self.config['account']['username'], 'blacklist')
+    mybans = [line for line in mybans.content_md.split('\n')\
+        if not (line.strip() == '' or line.startswith('#'))]
     
     self.bans = [x.strip().lower() for x in (btqban + mybans)]
     self.log("Ignoring subreddits: %s",(', '.join(self.bans)))
