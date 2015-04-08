@@ -78,6 +78,11 @@ class JoelBot:
     if comment.author.name == self.config['account']['username']:
       return True
 
+    #Check user ignore list
+    if self.ignores.check_ignored(comment.author.name):
+      self.log("Ignoring user %s",(comment.author.name))
+      return True
+
     return False
 
   def save_seen(self):
