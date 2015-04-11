@@ -7,6 +7,7 @@ import json
 import pickle
 import collections
 import sqlite3
+from requests import exceptions as req_exceptions
 from util import success, warn, log, fail, function_timeout
 import sys
 try:
@@ -61,9 +62,13 @@ class JoelBot:
         banlist['posts-only'] +\
         banlist['permission'])
 
-    mybans = self.r.get_wiki_page(self.config['account']['username'], 'blacklist')
-    mybans = [line for line in mybans.content_md.split('\n')\
-        if not (line.strip() == '' or line.startswith('#'))]
+    try:
+      mybans = self.r.get_wiki_page(self.config['bot']['subreddit'], 'blacklist')
+      mybans = [line for line in mybans.content_md.split('\n')\
+          if not (line.strip() == '' or line.startswith('#'))]
+    except req_exceptions.HTTPError:
+      self.log("Couldn't load bot-specific blacklist")
+      mybans = []
     
     self.bans = [x.strip().lower() for x in (btqban + mybans)]
     self.log("Ignoring subreddits: %s",(', '.join(self.bans)))
@@ -191,25 +196,33 @@ class JoelBot:
   def check_messages(self):
     last_message = self.db.get_last_message()
     last_tid = None if last_message is None else last_message['tid']
-    print last_tid
     for m in self.r.get_inbox(place_holder=last_tid):
       if(last_message is not None and m.created < last_message['sent']):
         self.log("Found old message, stopping!")
         break
 
       if(self.db.add_message(m)):
-        print m
         if(m.body in self.config['bot']['ignore_messages']):
           self.ignores.ignore_sender(m)
           if('ignore_reply' in self.config['bot']):
-            m.reply(self.config['bot']['ignore_reply'])
+            self.reply_to(m, 'Ignore Request', self.config['bot']['ignore_reply'])
         elif(m.body in self.config['bot']['unignore_messages']):
           self.ignores.unignore_sender(m)
           if('unignore_reply' in self.config['bot']):
-            m.reply(self.config['bot']['unignore_reply'])
+            self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
       else:
         self.log("Found duplicate message, stopping!")
         break
+
+  def reply_to(self, m, subject, reply):
+    if(m.subreddit):
+      # It's a comment, send a message
+      self.r.send_message(m.author, subject, reply)
+    else:
+      # It's a pm, just reply
+      m.reply(reply)
+
+
 
 class UnseenComments:
   def __init__(self, r, subreddit, maxlen=1000, state_file='seen.pickle'):
@@ -271,7 +284,7 @@ class CommentStore():
       return False
 
   def get_last_message(self):
-    self.c.execute('''SELECT tid FROM inbox ORDER BY seen DESC LIMIT 1''')
+    self.c.execute('''SELECT tid, sent FROM inbox ORDER BY seen DESC LIMIT 1''')
     last_message = self.c.fetchone()
     return last_message
 
@@ -289,12 +302,13 @@ class IgnoreList():
 
   def ignore_sender(self, m):
     self.c.execute('''INSERT OR REPLACE INTO ignore VALUES(?,?,?)''', 
-        (m.author, m.name, time.time()))
+        (m.author.name, m.name, time.time()))
 
   def unignore_sender(self, m):
-    self.c.execute('''DELETE FROM ignore WHERE username=?''', m.author)
+    self.c.execute('''DELETE FROM ignore WHERE username=?''', (m.author.name,))
 
   def check_ignored(self, username):
-    self.c.execute('''SELECT FROM ignore WHERE username=? LIMIT 1''', username)
-    return (self.c.rowcount > 0)
+    self.c.execute('''SELECT username FROM ignore WHERE username=? LIMIT 1''', (username,))
+    user = self.c.fetchone();
+    return (user is not None)
 
