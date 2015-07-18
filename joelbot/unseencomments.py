@@ -2,6 +2,8 @@
 # vim: sw=2 ts=2 sts=2 et :
 import pickle
 import praw
+import time
+import collections
 
 class UnseenComments:
   def __init__(self, r, subreddit, maxlen=1000, state_file='seen.pickle'):

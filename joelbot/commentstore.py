@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # vim: sw=2 ts=2 sts=2 et :
 import sqlite3
+import time
 
 class CommentStore():
   def __init__(self, dbfilename):
