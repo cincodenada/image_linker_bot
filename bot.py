@@ -14,6 +14,7 @@ import signal
 import shutil
 from mako.template import Template
 import traceback
+import sqlite3
 
 from joelbot import JoelBot
 
@@ -219,6 +220,24 @@ while True:
     else:
       sleep_secs = 5
     time.sleep(sleep_secs)
+
+    bot.log("Opening database...")
+    conn = sqlite3.connect(bot.config['bot']['dbfile'])
+    conn.row_factory = sqlite3.Row
+    conn.isolation_level = None
+    c = conn.cursor()
+
+    c.execute('''CREATE TABLE IF NOT EXISTS matches
+        (subreddit TEXT, key TEXT, trigger TEXT, ext TEXT, url TEXT, thread_id TEXT, trigger_id TEXT, was_reply INTEGER, ts INTEGER)''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS comments
+        (cid TEXT, text TEXT, data TEXT)''')
+    c.execute('''CREATE INDEX IF NOT EXISTS cd_cid ON comments(cid)''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS candidates
+        (key TEXT, ext TEXT, cid TEXT, ts INTEGER)''')
+    c.execute('''CREATE INDEX IF NOT EXISTS key_ext ON candidates(key, ext)''')
+
     bot.log("Starting comment stream...")
     last_restart = time.time()
     for comment in bot.comment_stream:
@@ -234,6 +253,7 @@ while True:
           if(bot.should_ignore(comment)):
             continue
 
+          ts = time.time()
           for match in matches:
             #Add the match to the list if it's not a dup
             (prefix, key, ext) = match
@@ -247,9 +267,13 @@ while True:
                 if(len(prefix.strip()) > 0):
                   linktext = prefix + linktext
 
-                commentlinks[linktext] = random.choice(urls)
+                url = random.choice(urls)
+                commentlinks[linktext] = url
+                c.execute('''INSERT INTO matches VALUES(?,?,?,?,?,?,?,?,?)''',
+                    (comment.subreddit.display_name, comment.link_id, imagekey, key, ext, url, comment.id, 0, ts))
             else:
               bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, ' '.join(match)))
+              c.execute('''INSERT INTO candidates VALUES(?,?,?,?)''', (key, ext, comment.id, ts))
           
           if len(commentlinks):
             if(not comment.is_root):
@@ -273,6 +297,8 @@ while True:
                 )
 
                 bot.r.send_message(comment.author,'I\'m glad you like me, but...',message,raise_captcha_exception=True)
+                c.execute('''INSERT INTO comments VALUES(?,?,?)''',
+                    (comment.id, message, time.time()))
                 continue
 
             replytext = form_reply(commentlinks)
@@ -284,6 +310,9 @@ while True:
               time.sleep(e.sleep_time)
               bot.log("Re-commenting on %s",(comment.permalink))
               comment.reply(replytext)
+
+            c.execute('''INSERT INTO comments VALUES(?,?,?)''',
+                (comment.id, replytext, time.time()))
 
       duration = time.time() - start
       totaltime += duration
