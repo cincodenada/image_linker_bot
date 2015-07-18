@@ -34,7 +34,7 @@ class JoelBot:
 
     self.load_settings()
 
-    self.db = CommentStore()
+    self.inbox = CommentStore()
     self.ignores = IgnoreList()
 
   def log(self, format, params=None, stderr=False,newline=True):
@@ -194,14 +194,14 @@ class JoelBot:
     self.comment_stream.refresh_comments()
 
   def check_messages(self):
-    last_message = self.db.get_last_message()
+    last_message = self.inbox.get_last_message()
     last_tid = None if last_message is None else last_message['tid']
     for m in self.r.get_inbox(place_holder=last_tid):
       if(last_message is not None and m.created < last_message['sent']):
         self.log("Found old message, stopping!")
-        break
+        return False
 
-      if(self.db.add_message(m)):
+      if(self.inbox.add_message(m)):
         if(m.body in self.config['bot']['ignore_messages']):
           self.ignores.ignore_sender(m)
           if('ignore_reply' in self.config['bot']):
@@ -212,12 +212,12 @@ class JoelBot:
             self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
       else:
         self.log("Found duplicate message, stopping!")
-        break
+        return False
 
   def reply_to(self, m, subject, reply):
     if(m.subreddit):
       # It's a comment, send a message
-      self.r.send_message(m.author, subject, reply)
+      self.r.send_message(m.author, subject, reply, raise_captcha_exception=True)
     else:
       # It's a pm, just reply
       m.reply(reply)
