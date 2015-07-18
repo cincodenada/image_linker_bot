@@ -5,11 +5,15 @@ account:
 bot:
     useragent:
         'default': Sample bot by /u/yournamehere v0.0 at /r/botsubreddithere
+        'cleanup': Sample cleanup bot by /u/yournamehere v0.0 at /r/botsubreddithere
+        'inbox': Sample inbox bot by /u/yournamehere v0.0 at /r/botsubreddithere
     footer: ^(Questions, comments, image suggestions? All are welcomed at /r/image_linker_bot)
     seen_len: 1000
     toomuch: |
         Message to send to people who reply-reply
     cleanup_time: 900  #Clean up every 15 minutes
+
+    # Image extension handling
     extensions:
         - jpeg
         - jpg
@@ -28,3 +32,14 @@ bot:
         - gif
         - png
     status_template: status_template.html
+
+    # Ignore list functionality
+    ignore_messages:
+        - ignore me
+    ignore_reply: You have been added to the ignore list
+    unignore_messages:
+        - unignore me
+    unignore_reply: You have been removed from the ignore list
+
+    #Database setup
+    dbfile: joelbot.db
