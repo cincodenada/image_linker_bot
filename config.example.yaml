@@ -3,6 +3,7 @@ account:
     password: bot_password
 
 bot:
+    subreddit: botsubreddithere
     useragent:
         'default': Sample bot by /u/yournamehere v0.0 at /r/botsubreddithere
         'cleanup': Sample cleanup bot by /u/yournamehere v0.0 at /r/botsubreddithere
@@ -12,6 +13,8 @@ bot:
     toomuch: |
         Message to send to people who reply-reply
     cleanup_time: 900  #Clean up every 15 minutes
+    inbox_time: 900  #Check inbox every 15 minutes
+    imagethread: thread_id # Thread to update with imagelist
 
     # Image extension handling
     extensions:
