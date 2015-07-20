@@ -9,6 +9,7 @@ while True:
   try:
     bot.check_messages()
     bot.log("Sleeping for %d seconds...", bot.config['bot']['inbox_time'])
+    sys.stdout.flush()
     sleep(bot.config['bot']['inbox_time'])
 
   except KeyboardInterrupt:
