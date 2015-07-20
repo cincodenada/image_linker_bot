@@ -66,6 +66,7 @@ try:
   imageconf = bot.get_wiki_yaml('conf/imagelist')
   bot.log('Loaded imagelist from wiki')
 except Exception as e:
+  bot.log("Couldn't load imagelist from wiki: " + str(sys.exc_info()[0]))
   imageconf = None
 
 # Fall back to local file
@@ -89,9 +90,9 @@ try:
     bot.write_wiki('imagelist', markdown, 'Updating image list')
     bot.log("Wrote updated imagelist to wiki")
 except Exception as e:
-  bot.log("Couldn't update wiki page, updating files:")
-  bot.log(str(e))
+  bot.log("Couldn't update wiki page: " + str(sys.exc_info()[0]))
 
+  bot.log("Updating files...")
   # Fall back to shuffling files around
   shutil.copy('imagelist.md','imagelist.%d.md' % (time.time()))
   shutil.copy('imagelist.md','imagelist.previous.md')
