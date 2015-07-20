@@ -61,18 +61,40 @@ bot = JoelBot('ilb_test')
 
 signal.signal(signal.SIGHUP,signal_handler)
 
-#Load image map
-imageconf = yaml.load(open('imagelist.yaml'))
+#Load image map, first from wiki
+try:
+  imageconf = bot.get_wiki_yaml('conf/imagelist')
+except Exception as e:
+  imageconf = None
+
+# Fall back to local file
+if not imageconf:
+  imageconf = yaml.load(open('imagelist.yaml'))
+  shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
+
 imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'], bot.config['bot']['switchable_extensions'])
-shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
 
 markdown = imagemap.get_formatted()
 
-shutil.copy('imagelist.md','imagelist.%d.md' % (time.time()))
-shutil.copy('imagelist.md','imagelist.previous.md')
-mdf = open('imagelist.md','w')
-mdf.write(markdown)
-mdf.close()
+# Update the image map on the wiki
+try:
+  try:
+    curmd = bot.get_wiki('imagelist')
+  except praw.errors.NotFound:
+    curmd = None
+
+  if(curmd != markdown):
+    bot.write_wiki('imagelist', markdown, 'Updating image list')
+except Exception as e:
+  bot.log("Couldn't update wiki page, updating files:")
+  bot.log(str(e))
+
+  # Fall back to shuffling files around
+  shutil.copy('imagelist.md','imagelist.%d.md' % (time.time()))
+  shutil.copy('imagelist.md','imagelist.previous.md')
+  mdf = open('imagelist.md','w')
+  mdf.write(markdown)
+  mdf.close()
 
 #Update the post
 if('imagethread' in bot.config['bot']):

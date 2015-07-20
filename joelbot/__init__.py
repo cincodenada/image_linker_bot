@@ -115,7 +115,7 @@ class JoelBot:
         banlist['permission'])
 
     try:
-      mybans = self.r.get_wiki_page(self.config['bot']['subreddit'], 'blacklist')
+      mybans = self.get_wiki('conf/blacklist')
       mybans = [line for line in mybans.content_md.split('\n')\
           if not (line.strip() == '' or line.startswith('#'))]
     except praw.errors.HTTPException:
@@ -193,3 +193,15 @@ class JoelBot:
     else:
       # It's a pm, just reply
       m.reply(reply)
+
+  def get_wiki(self, page):
+    return self.r.get_wiki_page(self.config['bot']['subreddit'], page)
+
+  def write_wiki(self, page, content, reason=None):
+    return self.r.edit_wiki_page(self.config['bot']['subreddit'], page, content, reason)
+
+  # Transform a wiki'd YAML into normal yaml and parse it
+  def get_wiki_yaml(self, page):
+    page = self.get_wiki(page)
+    return yaml.load(re.sub(r'^(\s+)* ','\1',page.content_md))
+
