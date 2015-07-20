@@ -166,8 +166,10 @@ class JoelBot:
     self.comment_stream.refresh_comments()
 
   def check_messages(self):
+    last_tid = None
     last_message = self.inbox.get_last_message()
-    last_tid = None if last_message is None else last_message['tid']
+    if last_message is not None:
+      _, last_tid = last_message['tid'].split('_', 1)
     for m in self.r.get_inbox(place_holder=last_tid):
       if(last_message is not None and m.created < last_message['sent']):
         self.log("Found old message, stopping!")
