@@ -5,8 +5,9 @@ import time
 import yaml
 import json
 import sqlite3
-from requests import exceptions as req_exceptions
 import sys
+import re
+import urlparse
 
 from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
@@ -14,17 +15,31 @@ from unseencomments import UnseenComments
 from commentstore import CommentStore
 
 class JoelBot:
-  def __init__(self, subreddit, config_file='config.yaml', useragent = None):
+  def __init__(self, subreddit, config_file='config.yaml', useragent = 'default'):
     #Load config and set up
     self.log("Logging in...")
     self.config = yaml.load(open(config_file))
+    self.start_time = time.time()
 
-    if useragent is None: 
-      useragent = self.config['bot']['useragent']['default']
+    self.useragent = useragent
+    self.r = praw.Reddit(self.config['bot']['useragent'][self.useragent])
+
+    if self.config['account']['oauth']:
+      self.r.set_oauth_app_info(**self.config['account']['oauth'])
+
+      if self.get_refresh_token():
+        self.refresh_oauth()
+      else:
+        rt = self.authorize_oauth()
+        if rt:
+          rtfile = open('refresh_token','w')
+          rtfile.write(rt)
+        else:
+          raise praw.errors.OAuthException("Couldn't fetch refresh token!")
+
     else:
-      useragent = self.config['bot']['useragent'][useragent]
-    self.r = praw.Reddit(useragent)
-    self.r.login(self.config['account']['username'],self.config['account']['password'])
+      self.log("Warning! Using deprecated password login!", stderr=True)
+      self.r.login(self.config['account']['username'],self.config['account']['password'])
 
     self.comment_stream = UnseenComments(self.r, subreddit, self.config['bot']['seen_len'])
     self.subreddit = subreddit
@@ -33,6 +48,46 @@ class JoelBot:
 
     self.inbox = CommentStore(self.config['bot']['dbfile'])
     self.ignores = IgnoreList(self.config['bot']['dbfile'])
+
+  def id_string(self):
+    return "{:s} ({:s}) {:f}".format(
+      self.config['account']['username'],
+      self.useragent or 'default',
+      self.start_time
+    )
+
+  def authorize_oauth(self):
+    auth_url = self.r.get_authorize_url(
+      self.id_string(),
+      ' '.join(self.config['bot']['oauth_scopes']),
+      True
+    )
+
+    self.log('Go to the following URL, copy the URL that you are redirected to, then come back and paste it here:')
+    self.log(auth_url)
+    redirect_url = raw_input("Redirected URL: ")
+
+    urlparts = urlparse.urlsplit(redirect_url)
+    querydata = urlparse.parse_qs(urlparts.query)
+    self.oauth_access = self.r.get_access_information(querydata['code'])
+    self.refresh_token = self.oauth_access['refresh_token']
+
+    return self.refresh_token
+
+  def refresh_oauth(self):
+    return self.r.refresh_access_information(self.refresh_token)
+
+  def get_refresh_token(self):
+    # Check if we have a refresh token available
+    try:
+      rtfile = open('refresh_token','r')
+      rt = rtfile.readline().rstrip()
+      self.refresh_token = rt
+      rtfile.close()
+    except IOError:
+      return None
+
+    return self.refresh_token
 
   def log(self, format, params=None, stderr=False,newline=True):
     prefix = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -44,7 +99,7 @@ class JoelBot:
       sys.stderr.write(logline)
     else:
       print(logline)
-    
+
   def load_settings(self):
     self.log("Reloading config...")
     sys.stdout.flush()
@@ -63,10 +118,10 @@ class JoelBot:
       mybans = self.r.get_wiki_page(self.config['bot']['subreddit'], 'blacklist')
       mybans = [line for line in mybans.content_md.split('\n')\
           if not (line.strip() == '' or line.startswith('#'))]
-    except req_exceptions.HTTPError:
+    except praw.errors.HTTPException:
       self.log("Couldn't load bot-specific blacklist")
       mybans = []
-    
+
     self.bans = [x.strip().lower() for x in (btqban + mybans)]
     self.log("Ignoring subreddits: %s",(', '.join(self.bans)))
 

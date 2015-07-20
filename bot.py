@@ -75,7 +75,7 @@ mdf.write(markdown)
 mdf.close()
 
 #Update the post
-if(bot.config['bot']['imagethread']):
+if('imagethread' in bot.config['bot']):
   imagepost = bot.r.get_submission(submission_id=bot.config['bot']['imagethread'])
   header = re.match(r'([\S\s]*)---',imagepost.selftext)
   if(header):
@@ -230,6 +230,8 @@ while True:
     # Maybe if we get to the end, we need to get more?
     bot.refresh_comments()
             
+  except praw.errors.OAuthException:
+    bot.refresh_oauth()
   except KeyboardInterrupt:
     bot.log("Shutting down after scanning %d comments...",(numchecked))
     bot.save_seen()
