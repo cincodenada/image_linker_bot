@@ -202,6 +202,7 @@ class JoelBot:
 
   # Transform a wiki'd YAML into normal yaml and parse it
   def get_wiki_yaml(self, page):
-    page = self.get_wiki(page)
-    return yaml.load(re.sub(r'^(\s+)* ','\1',page.content_md))
+    wikipage = self.get_wiki(page)
+    cleaned_yaml = re.sub(r'^(\s*)\* ','\\1', wikipage.content_md, flags=re.MULTILINE)
+    return yaml.load(cleaned_yaml)
 
