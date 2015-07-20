@@ -177,10 +177,12 @@ class JoelBot:
 
       if(self.inbox.add_message(m)):
         if(m.body in self.config['bot']['ignore_messages']):
+          self.log("Ignoring {:s}...".format(m.author.name))
           self.ignores.ignore_sender(m)
           if('ignore_reply' in self.config['bot']):
             self.reply_to(m, 'Ignore Request', self.config['bot']['ignore_reply'])
         elif(m.body in self.config['bot']['unignore_messages']):
+          self.log("Unignoring {:s}...".format(m.author.name))
           self.ignores.unignore_sender(m)
           if('unignore_reply' in self.config['bot']):
             self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
