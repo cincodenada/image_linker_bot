@@ -1,9 +1,21 @@
 account:
     username: bot_username
     password: bot_password
+    oauth:
+        client_id: CLIENT_ID_HERE
+        client_secret: CLIENT_SECRET_HERE
+        redirect_uri: http://localhost/authorize_callback
 
 bot:
     subreddit: botsubreddithere
+    oauth_scopes:
+        - edit
+        - identity
+        - read
+        - submit
+        - privatemessages
+        - wikiedit
+        - wikiread
     useragent:
         'default': Sample bot by /u/yournamehere v0.0 at /r/botsubreddithere
         'cleanup': Sample cleanup bot by /u/yournamehere v0.0 at /r/botsubreddithere

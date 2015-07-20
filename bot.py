@@ -64,6 +64,7 @@ signal.signal(signal.SIGHUP,signal_handler)
 #Load image map, first from wiki
 try:
   imageconf = bot.get_wiki_yaml('conf/imagelist')
+  bot.log('Loaded imagelist from wiki')
 except Exception as e:
   imageconf = None
 
@@ -71,6 +72,7 @@ except Exception as e:
 if not imageconf:
   imageconf = yaml.load(open('imagelist.yaml'))
   shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
+  bot.log('Loaded imagelist from file')
 
 imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'], bot.config['bot']['switchable_extensions'])
 
@@ -85,6 +87,7 @@ try:
 
   if(curmd != markdown):
     bot.write_wiki('imagelist', markdown, 'Updating image list')
+    bot.log("Wrote updated imagelist to wiki")
 except Exception as e:
   bot.log("Couldn't update wiki page, updating files:")
   bot.log(str(e))
