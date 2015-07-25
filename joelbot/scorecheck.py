@@ -126,8 +126,10 @@ class ScoreCheck:
       self.c.execute('''CREATE INDEX IF NOT EXISTS cscores_time ON comment_scores(ts)''')
 
       for cols in self.del_list:
-        cols.append(ts)
-        self.c.execute('''INSERT INTO deleted_comments VALUES(?,?,?,?)''', cols)
+        # I'm sure this could be done better
+        curcols = list(cols)
+        curcols.append(ts)
+        self.c.execute('''INSERT INTO deleted_comments VALUES(?,?,?,?)''', curcols)
       self.conn.commit()
 
     except Exception, e:
