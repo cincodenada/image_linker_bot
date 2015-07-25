@@ -152,7 +152,6 @@ class JoelBot:
     sc.print_report()
     sc.save_report()
 
-
   def get_template(self):
     if('status_template' in self.config['bot']):
       template = self.config['bot']['status_template']

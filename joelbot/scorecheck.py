@@ -39,7 +39,7 @@ class ScoreCheck:
 
     self.bot = bot
 
-  def run(self):
+  def run(self, delete_negative = True):
     # Comment deletion taken straight from autowikibot
     # No need to reinvent the wheel
     log("COMMENT SCORE CHECK CYCLE STARTED")
@@ -48,7 +48,8 @@ class ScoreCheck:
     for c in user.get_comments(limit=None):
       
       # Sum votes for each subreddit
-      self.subreddit_map[c.id] = c.subreddit.display_name
+      sub = c.subreddit.display_name
+      self.subreddit_map[c.id] = sub
 
       self.counts['total'] += 1
       self.total_score += c.score
@@ -56,8 +57,9 @@ class ScoreCheck:
 
       colorname = 'none'
       if c.score < 1: # or sub.lower() in self.bot.bans:
-        self.del_list.append((sub.lower(), c.score, c.id))
-        c.delete()
+        if(delete_negative):
+          self.del_list.append((sub.lower(), c.score, c.id))
+          c.delete()
         self.counts['downvoted'] += 1
         colornamesc = 'down' 
       elif c.score > 10:
