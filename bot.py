@@ -196,11 +196,11 @@ while True:
 
                 url = random.choice(urls)
                 commentlinks[linktext] = url
-                c.execute('''INSERT INTO matches VALUES(?,?,?,?,?,?,?,?,?)''',
+                c.execute('''INSERT INTO matches(subreddit, thread_id, key, trigger, ext, url, trigger_id, was_reply) VALUES(?,?,?,?,?,?,?,?,?)''',
                     (comment.subreddit.display_name, comment.link_id, imagekey, key, ext, url, comment.id, 0, ts))
             else:
               bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, ' '.join(match)))
-              c.execute('''INSERT INTO candidates VALUES(?,?,?,?)''', (key, ext, comment.id, ts))
+              c.execute('''INSERT INTO candidates(key, ext, cid, ts) VALUES(?,?,?,?)''', (key, ext, comment.id, ts))
           
           if len(commentlinks):
             if(not comment.is_root):
@@ -224,7 +224,7 @@ while True:
                 )
 
                 bot.r.send_message(comment.author,'I\'m glad you like me, but...',message,raise_captcha_exception=True)
-                c.execute('''INSERT INTO comments VALUES(?,?,?)''',
+                c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
                     (comment.id, message, time.time()))
                 continue
 
@@ -238,7 +238,7 @@ while True:
               bot.log("Re-commenting on %s",(comment.permalink))
               comment.reply(replytext)
 
-            c.execute('''INSERT INTO comments VALUES(?,?,?)''',
+            c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
                 (comment.id, replytext, time.time()))
 
       duration = time.time() - start
