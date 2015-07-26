@@ -12,6 +12,8 @@ while True:
     sys.stdout.flush()
     sleep(bot.config['bot']['inbox_time'])
 
+  except praw.errors.OAuthException:
+    bot.refresh_oauth()
   except KeyboardInterrupt:
     bot.log("Shutting down...")
     sys.exit("Keyboard interrupt, shutting down...")

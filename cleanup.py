@@ -11,6 +11,8 @@ while True:
     bot.log("Sleeping for %d seconds...", bot.config['bot']['cleanup_time'])
     sleep(bot.config['bot']['cleanup_time'])
 
+  except praw.errors.OAuthException:
+    bot.refresh_oauth()
   except KeyboardInterrupt:
     bot.log("Shutting down...")
     sys.exit("Keyboard interrupt, shutting down...")
