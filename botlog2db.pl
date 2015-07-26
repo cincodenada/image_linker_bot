@@ -6,6 +6,7 @@ $suffix = shift(@ARGV);
 
 $comments = Path::Class::File->new("comments_$suffix.tsv")->openw();
 $candidates = Path::Class::File->new("candidates_$suffix.tsv")->openw();
+$matches = Path::Class::File->new("matches_$suffix.tsv")->openw();
 
 $mode = '';
 while(<>) {
@@ -27,7 +28,11 @@ while(<>) {
         }
     }
 
-    if(/Commenting on .*\/(?<cid>\w+) \((?<image>.*)\)$/) {
+    if(/Commenting on .*\/r\/(?<sr>\w+)\/comments\/(?<tid>\w+)\/.*\/(?<cid>\w+) \((?<image>.*)\)$/) {
+        for my $image (split(/, /, $+{image})) {
+            ($key, $ext) = split(/\./, $image),
+            $matches->print(join("\t", $+{sr}, $key, $key, $ext, '', 't3_' . $+{tid}, $+{cid}, 0, $lastts) . "\n");
+        }
         $comments->print(join("\t", $+{cid}, $+{image}, $lastts) . "\n");
     }
 }
