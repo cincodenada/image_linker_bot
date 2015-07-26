@@ -16,7 +16,7 @@ class IgnoreList():
     self.c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS ignore_user ON ignore(username)''')
 
   def ignore_sender(self, m):
-    self.c.execute('''INSERT OR REPLACE INTO ignore VALUES(?,?,?)''', 
+    self.c.execute('''INSERT OR REPLACE INTO ignore(username, request_id, ignore_date) VALUES(?,?,?)''',
         (m.author.name, m.name, time.time()))
 
   def unignore_sender(self, m):

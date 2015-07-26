@@ -116,7 +116,7 @@ class ScoreCheck:
       self.c.execute('''CREATE INDEX IF NOT EXISTS cscores_time ON comment_scores(ts)''')
 
       for cid, score in self.score_map.iteritems():
-        self.c.execute('''INSERT INTO comment_scores VALUES(?,?,?,?)''',
+        self.c.execute('''INSERT INTO comment_scores(cid, subreddit, score, ts) VALUES(?,?,?,?)''',
             (cid, self.subreddit_map[cid], score, ts))
       self.conn.commit()
 
@@ -129,7 +129,7 @@ class ScoreCheck:
         # I'm sure this could be done better
         curcols = list(cols)
         curcols.append(ts)
-        self.c.execute('''INSERT INTO deleted_comments VALUES(?,?,?,?)''', curcols)
+        self.c.execute('''INSERT INTO deleted_comments(cid, subreddit, score, ts) VALUES(?,?,?,?)''', curcols)
       self.conn.commit()
 
     except Exception, e:

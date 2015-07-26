@@ -17,7 +17,7 @@ class CommentStore():
 
   def add_message(self, m):
     try:
-      self.c.execute('''INSERT INTO inbox VALUES(?,?,?,?,?,?)''', 
+      self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen) VALUES(?,?,?,?,?,?)''',
           (m.name, m.subject, m.body, m.author.name, m.created, time.time()))
       return True
     except sqlite3.IntegrityError:
