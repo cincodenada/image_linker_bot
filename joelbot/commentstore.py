@@ -11,14 +11,14 @@ class CommentStore():
     self.c = self.conn.cursor()
 
     self.c.execute('''CREATE TABLE IF NOT EXISTS inbox
-        (tid TEXT, subject TEXT, body TEXT, sender TEXT, sent INTEGER, seen INTEGER)''')
+        (tid TEXT, subject TEXT, body TEXT, sender TEXT, sent INTEGER, seen INTEGER, parent_id TEXT)''')
     self.c.execute('''CREATE INDEX IF NOT EXISTS inbox_seen ON inbox(seen)''')
     self.c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS inbox_id ON inbox(tid)''')
 
   def add_message(self, m):
     try:
-      self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen) VALUES(?,?,?,?,?,?)''',
-          (m.name, m.subject, m.body, m.author.name, m.created, time.time()))
+      self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
+          (m.name, m.subject, m.body, m.author.name, m.created, time.time(), m.parent_id))
       return True
     except sqlite3.IntegrityError:
       return False
