@@ -196,7 +196,7 @@ while True:
 
                 url = random.choice(urls)
                 commentlinks[linktext] = url
-                c.execute('''INSERT INTO matches(subreddit, thread_id, key, trigger, ext, url, trigger_id, was_reply) VALUES(?,?,?,?,?,?,?,?,?)''',
+                c.execute('''INSERT INTO matches(subreddit, thread_id, key, trigger, ext, url, trigger_id, was_reply, ts) VALUES(?,?,?,?,?,?,?,?,?)''',
                     (comment.subreddit.display_name, comment.link_id, imagekey, key, ext, url, comment.id, 0, ts))
             else:
               bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, ' '.join(match)))
