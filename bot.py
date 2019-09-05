@@ -57,7 +57,9 @@ parser = argparse.ArgumentParser(description="Links text such as themoreyouknow.
 global bot
 global imagemap
 
-bot = JoelBot('ilb_test')
+bot = JoelBot('all')
+bot.log("\n", stderr=True)
+bot.log("Starting up...", stderr=True)
 
 signal.signal(signal.SIGHUP,signal_handler)
 

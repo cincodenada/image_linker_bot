@@ -15,6 +15,9 @@ from unseencomments import UnseenComments
 from commentstore import CommentStore
 
 class JoelBot:
+  max_retries = 50
+  backoff = 2
+
   def __init__(self, subreddit, config_file='config.yaml', useragent = 'default'):
     #Load config and set up
     self.log("Logging in...")
@@ -22,21 +25,20 @@ class JoelBot:
     self.start_time = time.time()
 
     self.useragent = useragent
+
     self.r = praw.Reddit(self.config['bot']['useragent'][self.useragent])
 
     if self.config['account']['oauth']:
       self.r.set_oauth_app_info(**self.config['account']['oauth'])
 
-      if self.get_refresh_token():
-        self.refresh_oauth()
-      else:
-        rt = self.authorize_oauth()
-        if rt:
-          rtfile = open('refresh_token','w')
-          rtfile.write(rt)
-        else:
-          raise praw.errors.OAuthException("Couldn't fetch refresh token!")
-
+      while True:
+        try:
+          self.auth_oauth()
+          break
+        except praw.errors.HTTPException:
+          self.backoff *= 2
+          self.log("HTTP error logging in! Trying again in {} seconds...".format(self.backoff), stderr=True)
+        time.sleep(self.backoff)
     else:
       self.log("Warning! Using deprecated password login!", stderr=True)
       self.r.login(self.config['account']['username'],self.config['account']['password'])
@@ -48,6 +50,17 @@ class JoelBot:
 
     self.inbox = CommentStore(self.config['bot']['dbfile'])
     self.ignores = IgnoreList(self.config['bot']['dbfile'])
+
+  def auth_oauth(self):
+    if self.get_refresh_token():
+      self.refresh_oauth()
+    else:
+      rt = self.authorize_oauth()
+      if rt:
+        rtfile = open('refresh_token','w')
+        rtfile.write(rt)
+      else:
+        raise praw.errors.OAuthException("Couldn't fetch refresh token!")
 
   def id_string(self):
     return "{:s} ({:s}) {:f}".format(

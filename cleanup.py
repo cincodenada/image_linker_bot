@@ -2,6 +2,7 @@ from joelbot import JoelBot
 import traceback
 from time import sleep
 import sys
+import praw
 
 bot = JoelBot('all',useragent='cleanup')
 
