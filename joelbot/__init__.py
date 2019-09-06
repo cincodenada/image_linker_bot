@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # vim: sw=2 ts=2 sts=2 et :
 import praw
+import prawcore
 import time
 import yaml
 import json
@@ -35,7 +36,7 @@ class JoelBot:
         try:
           self.auth_oauth()
           break
-        except praw.errors.HTTPException:
+        except praw.exceptions.APIException:
           self.backoff *= 2
           self.log("HTTP error logging in! Trying again in {} seconds...".format(self.backoff), stderr=True)
         time.sleep(self.backoff)
@@ -60,7 +61,7 @@ class JoelBot:
         rtfile = open('refresh_token','w')
         rtfile.write(rt)
       else:
-        raise praw.errors.OAuthException("Couldn't fetch refresh token!")
+        raise prawcore.exceptions.OAuthException("Couldn't fetch refresh token!")
 
   def id_string(self):
     return "{:s} ({:s}) {:f}".format(
@@ -131,7 +132,7 @@ class JoelBot:
       mybans = self.get_wiki('conf/blacklist')
       mybans = [line for line in mybans.content_md.split('\n')\
           if not (line.strip() == '' or line.startswith('#'))]
-    except praw.errors.HTTPException:
+    except prawcore.exceptions.ResponseException:
       self.log("Couldn't load bot-specific blacklist")
       mybans = []
 

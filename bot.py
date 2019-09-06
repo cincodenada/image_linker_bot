@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # vim: sw=2 ts=2 sts=2 et :
 import praw
+import prawcore
 import time
 from datetime import datetime
 import re 
@@ -85,7 +86,7 @@ markdown = imagemap.get_formatted()
 try:
   try:
     curmd = bot.get_wiki('imagelist')
-  except praw.errors.NotFound:
+  except prawcore.exceptions.NotFound:
     curmd = None
 
   if(curmd != markdown):
@@ -234,7 +235,7 @@ while True:
             try:
               bot.log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
               comment.reply(replytext)
-            except praw.errors.RateLimitExceeded, e:
+            except praw.exceptions.APIException, e:
               bot.log("Rate limit exceeded, sleeping %d seconds and trying again...",(e.sleep_time))
               time.sleep(e.sleep_time)
               bot.log("Re-commenting on %s",(comment.permalink))
@@ -258,7 +259,7 @@ while True:
     # Maybe if we get to the end, we need to get more?
     bot.refresh_comments()
             
-  except praw.errors.OAuthException:
+  except prawcore.exceptions.OAuthException:
     bot.refresh_oauth()
   except KeyboardInterrupt:
     bot.log("Shutting down after scanning %d comments...",(numchecked))

@@ -2,6 +2,7 @@ from joelbot import JoelBot
 import traceback
 from time import sleep
 import sys
+import prawcore
 
 bot = JoelBot('all',useragent='inbox')
 
@@ -12,7 +13,7 @@ while True:
     sys.stdout.flush()
     sleep(bot.config['bot']['inbox_time'])
 
-  except praw.errors.OAuthException:
+  except prawcore.exceptions.OAuthException:
     bot.refresh_oauth()
   except KeyboardInterrupt:
     bot.log("Shutting down...")
