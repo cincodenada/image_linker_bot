@@ -1,3 +1,11 @@
 imagelist.*.yaml
 imagelist.*.md
 *.pyc
+VENV
+config.yaml
+
+# Generated
+seen.pickle
+refresh_token
+status.html
+joelbot.db
