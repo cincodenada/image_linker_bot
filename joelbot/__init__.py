@@ -185,7 +185,8 @@ class JoelBot:
     last_message = self.inbox.get_last_message()
     if last_message is not None:
       _, last_tid = last_message['tid'].split('_', 1)
-    for m in self.r.get_inbox(place_holder=last_tid):
+    # TODO: Make continuous/stream-based?
+    for m in self.r.inbox.messages(params={'after': last_tid}):
       if(last_message is not None and m.created < last_message['sent']):
         self.log("Found old message, stopping!")
         return False

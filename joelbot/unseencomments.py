@@ -8,7 +8,7 @@ import collections
 class UnseenComments:
   def __init__(self, r, subreddit, maxlen=1000, state_file='seen.pickle'):
     self.r = r
-    self.subreddit = subreddit
+    self.subreddit = self.r.subreddit(subreddit)
     self.state_file = state_file
     self.refresh_comments()
 
@@ -22,7 +22,7 @@ class UnseenComments:
     return self
 
   def refresh_comments(self):
-    self.comment_stream = praw.helpers.comment_stream(self.r, self.subreddit, limit=None, verbosity=0)
+    self.comment_stream = self.subreddit.stream.comments()
 
   def next(self):
     next_comment = self.comment_stream.next()
