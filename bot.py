@@ -66,7 +66,7 @@ signal.signal(signal.SIGHUP,signal_handler)
 
 #Load image map, first from wiki
 try:
-  imageconf = bot.get_wiki_yaml('conf/imagelist')
+  imageconf = bot.get_wiki_yaml('botconf/imagelist')
   bot.log('Loaded imagelist from wiki')
 except Exception as e:
   bot.log("Couldn't load imagelist from wiki: " + str(sys.exc_info()[0]))

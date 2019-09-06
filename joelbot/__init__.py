@@ -131,10 +131,11 @@ class JoelBot:
         banlist['permission'])
 
     try:
-      mybans = self.get_wiki('conf/blacklist')
-      mybans = [line for line in mybans.content_md.split('\n')\
+      mybans = self.get_wiki('botconf/blacklist')
+      mybans = [line.lstrip(' *-') for line in mybans.content_md.split('\n')\
           if not (line.strip() == '' or line.startswith('#'))]
-    except prawcore.exceptions.ResponseException:
+    except prawcore.exceptions.ResponseException as e:
+      print e
       self.log("Couldn't load bot-specific blacklist")
       mybans = []
 
