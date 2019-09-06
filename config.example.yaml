@@ -12,6 +12,7 @@ bot:
         - edit
         - identity
         - read
+        - history
         - submit
         - privatemessages
         - wikiedit
