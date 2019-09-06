@@ -9,6 +9,7 @@ import sqlite3
 import sys
 import re
 import urlparse
+import random
 
 from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
@@ -26,23 +27,20 @@ class JoelBot:
     self.start_time = time.time()
 
     self.useragent = useragent
-
-    self.r = praw.Reddit(self.config['bot']['useragent'][self.useragent])
+    self.r = None
 
     if self.config['account']['oauth']:
-      self.r.set_oauth_app_info(**self.config['account']['oauth'])
-
       while True:
         try:
           self.auth_oauth()
           break
         except praw.exceptions.APIException:
           self.backoff *= 2
-          self.log("HTTP error logging in! Trying again in {} seconds...".format(self.backoff), stderr=True)
+          self.log("Error logging in! Trying again in {} seconds...".format(self.backoff), stderr=True)
         time.sleep(self.backoff)
     else:
-      self.log("Warning! Using deprecated password login!", stderr=True)
-      self.r.login(self.config['account']['username'],self.config['account']['password'])
+      self.log("Error! Password login no longer supported!", stderr=True)
+      sys.exit()
 
     self.comment_stream = UnseenComments(self.r, subreddit, self.config['bot']['seen_len'])
     self.subreddit = subreddit
@@ -54,8 +52,16 @@ class JoelBot:
 
   def auth_oauth(self):
     if self.get_refresh_token():
-      self.refresh_oauth()
+      self.r = praw.Reddit(
+        user_agent = self.config['bot']['useragent'][self.useragent],
+        refresh_token = self.refresh_token,
+        **self.config['account']['oauth']
+      )
     else:
+      self.r = praw.Reddit(
+        user_agent = self.config['bot']['useragent'][self.useragent],
+        **self.config['account']['oauth']
+      )
       rt = self.authorize_oauth()
       if rt:
         rtfile = open('refresh_token','w')
@@ -71,10 +77,11 @@ class JoelBot:
     )
 
   def authorize_oauth(self):
-    auth_url = self.r.get_authorize_url(
-      self.id_string(),
-      ' '.join(self.config['bot']['oauth_scopes']),
-      True
+    self.oauth_state = str(random.randint(0, 65000))
+    auth_url = self.r.auth.url(
+      self.config['bot']['oauth_scopes'],
+      self.oauth_state,
+      "permanent"
     )
 
     self.log('Go to the following URL, copy the URL that you are redirected to, then come back and paste it here:')
@@ -83,13 +90,8 @@ class JoelBot:
 
     urlparts = urlparse.urlsplit(redirect_url)
     querydata = urlparse.parse_qs(urlparts.query)
-    self.oauth_access = self.r.get_access_information(querydata['code'])
-    self.refresh_token = self.oauth_access['refresh_token']
-
+    self.refresh_token = self.r.auth.authorize(querydata['code'])
     return self.refresh_token
-
-  def refresh_oauth(self):
-    return self.r.refresh_access_information(self.refresh_token)
 
   def get_refresh_token(self):
     # Check if we have a refresh token available
