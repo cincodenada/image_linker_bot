@@ -124,7 +124,7 @@ class JoelBot:
     #Load banlist
     self.log("Loading banlists...")
     sys.stdout.flush()
-    bottiquette = self.r.get_wiki_page('Bottiquette', 'robots_txt_json')
+    bottiquette = self.r.subreddit('Bottiquette').wiki['robots_txt_json']
     banlist = json.loads(bottiquette.content_md)
     btqban = (banlist['disallowed'] +\
         banlist['posts-only'] +\
@@ -214,10 +214,10 @@ class JoelBot:
       m.reply(reply)
 
   def get_wiki(self, page):
-    return self.r.get_wiki_page(self.config['bot']['subreddit'], page)
+    return self.r.subreddit(self.config['bot']['subreddit']).wiki[page]
 
   def write_wiki(self, page, content, reason=None):
-    return self.r.edit_wiki_page(self.config['bot']['subreddit'], page, content, reason)
+    return self.r.subreddit(self.config['bot']['subreddit']).wiki[page].edit(content, reason)
 
   # Transform a wiki'd YAML into normal yaml and parse it
   def get_wiki_yaml(self, page):

@@ -43,7 +43,7 @@ class ScoreCheck:
     # Comment deletion taken straight from autowikibot
     # No need to reinvent the wheel
     log("COMMENT SCORE CHECK CYCLE STARTED")
-    user = self.bot.r.get_redditor(self.bot.config['account']['username'])
+    user = self.bot.r.redditor(self.bot.config['account']['username'])
             
     for c in user.get_comments(limit=None):
       

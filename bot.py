@@ -105,7 +105,7 @@ except Exception as e:
 
 #Update the post
 if('imagethread' in bot.config['bot']):
-  imagepost = bot.r.get_submission(submission_id=bot.config['bot']['imagethread'])
+  imagepost = bot.r.submission(id=bot.config['bot']['imagethread'])
   header = re.match(r'([\S\s]*)---',imagepost.selftext)
   if(header):
     header = header.group(1)
@@ -226,7 +226,7 @@ while True:
                   bot.config['bot']['toomuch']
                 )
 
-                bot.r.send_message(comment.author,'I\'m glad you like me, but...',message,raise_captcha_exception=True)
+                bot.r.redditor(comment.author).message('I\'m glad you like me, but...',message,raise_captcha_exception=True)
                 c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
                     (comment.id, message, time.time()))
                 continue
