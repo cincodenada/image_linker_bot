@@ -17,8 +17,12 @@ class CommentStore():
 
   def add_message(self, m):
     try:
-      self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
-          (m.name, m.subject, m.body, m.author.name, m.created, time.time(), m.parent_id))
+      if(m.subreddit):
+        self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
+            (m.name, m.subject, m.body, 'r/' + m.subreddit.name, m.created, time.time(), m.parent_id))
+      else:
+        self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
+            (m.name, m.subject, m.body, m.author.name, m.created, time.time(), m.parent_id))
       return True
     except sqlite3.IntegrityError:
       return False

@@ -207,9 +207,9 @@ while True:
           
           if len(commentlinks):
             if(not comment.is_root):
-              parent = bot.r.get_info(thing_id=comment.parent_id)
+              parent = bot.r.comment(comment.parent_id[3:])
               subreddit = comment.subreddit.display_name.lower()
-              if(parent.author.name == bot.config['account']['username'] and subreddit != bot.config['account']['username']):
+              if(parent.author and parent.author.name == bot.config['account']['username'] and subreddit != bot.config['account']['username']):
                 bot.log("Sending warning to %s for reply-reply...",(comment.author))
 
                 #Always with the plurals
@@ -236,10 +236,15 @@ while True:
               bot.log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
               comment.reply(replytext)
             except praw.exceptions.APIException, e:
-              bot.log("Rate limit exceeded, sleeping %d seconds and trying again...",(e.sleep_time))
-              time.sleep(e.sleep_time)
-              bot.log("Re-commenting on %s",(comment.permalink))
-              comment.reply(replytext)
+              if(e.error_type == "TOO_OLD"):
+                bot.log("Comment too old!")
+              else:
+                # Otherwise assume it's rate limiting...without a sleep time?...ugh
+                sleeptime = 2
+                bot.log("Rate limit exceeded, sleeping %d seconds and trying again...",(sleeptime))
+                time.sleep(sleeptime)
+                bot.log("Re-commenting on %s",(comment.permalink))
+                comment.reply(replytext)
 
             c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
                 (comment.id, replytext, time.time()))
