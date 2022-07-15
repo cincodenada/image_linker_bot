@@ -16,11 +16,11 @@ from ignorelist import IgnoreList
 from unseencomments import UnseenComments
 from commentstore import CommentStore
 
-class JoelBot:
+class BaseBot:
   max_retries = 50
   backoff = 2
 
-  def __init__(self, subreddit, config_file='config.yaml', useragent = 'default'):
+  def __init__(self, subreddit=None, config_file='config.yaml', useragent = 'default', skip_remote_config=False):
     #Load config and set up
     self.log("Logging in...")
     self.config = yaml.load(open(config_file))
@@ -42,14 +42,6 @@ class JoelBot:
       self.log("Error! Password login no longer supported!", stderr=True)
       sys.exit()
 
-    self.comment_stream = UnseenComments(self.r, subreddit, self.config['bot']['seen_len'])
-    self.subreddit = subreddit
-
-    self.load_settings()
-
-    self.inbox = CommentStore(self.config['bot']['dbfile'])
-    self.ignores = IgnoreList(self.config['bot']['dbfile'])
-
   def auth_oauth(self):
     if self.get_refresh_token():
       self.r = praw.Reddit(
@@ -68,13 +60,6 @@ class JoelBot:
         rtfile.write(rt)
       else:
         raise prawcore.exceptions.OAuthException("Couldn't fetch refresh token!")
-
-  def id_string(self):
-    return "{:s} ({:s}) {:f}".format(
-      self.config['account']['username'],
-      self.useragent or 'default',
-      self.start_time
-    )
 
   def authorize_oauth(self):
     self.oauth_state = str(random.randint(0, 65000))
@@ -115,6 +100,26 @@ class JoelBot:
       sys.stderr.write(logline)
     else:
       print(logline)
+
+  def id_string(self):
+    return "{:s} ({:s}) {:f}".format(
+      self.config['account']['username'],
+      self.useragent or 'default',
+      self.start_time
+    )
+
+class JoelBot(BaseBot):
+  def __init__(self, subreddit=None, **kwargs):
+    BaseBot.__init__(self, **kwargs)
+
+    if subreddit:
+      self.comment_stream = UnseenComments(self.r, subreddit, self.config['bot']['seen_len'])
+      self.subreddit = subreddit
+
+    self.load_settings()
+
+    self.inbox = CommentStore(self.config['bot']['dbfile'])
+    self.ignores = IgnoreList(self.config['bot']['dbfile'])
 
   def load_settings(self):
     self.log("Reloading config...")
@@ -226,4 +231,3 @@ class JoelBot:
     wikipage = self.get_wiki(page)
     cleaned_yaml = re.sub(r'^(\s*)\* ','\\1', wikipage.content_md, flags=re.MULTILINE)
     return yaml.load(cleaned_yaml)
-
