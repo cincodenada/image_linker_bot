@@ -15,11 +15,11 @@ import signal
 import shutil
 from mako.template import Template
 import traceback
-import sqlite3
 import inspect
 
 from joelbot import JoelBot
 from imagemap import ImageMap
+from memedb import MemeDb
 
 def form_reply(link_list, withfooter = True):
   lines = []
@@ -152,21 +152,7 @@ while True:
     time.sleep(sleep_secs)
 
     bot.log("Opening database...")
-    conn = sqlite3.connect(bot.config['bot']['dbfile'])
-    conn.row_factory = sqlite3.Row
-    conn.isolation_level = None
-    c = conn.cursor()
-
-    c.execute('''CREATE TABLE IF NOT EXISTS matches
-        (subreddit TEXT, key TEXT, trigger TEXT, ext TEXT, url TEXT, thread_id TEXT, trigger_id TEXT, was_reply INTEGER, ts INTEGER)''')
-
-    c.execute('''CREATE TABLE IF NOT EXISTS comments
-        (cid TEXT, text TEXT, ts INTEGER)''')
-    c.execute('''CREATE INDEX IF NOT EXISTS cd_cid ON comments(cid)''')
-
-    c.execute('''CREATE TABLE IF NOT EXISTS candidates
-        (key TEXT, ext TEXT, cid TEXT, ts INTEGER)''')
-    c.execute('''CREATE INDEX IF NOT EXISTS key_ext ON candidates(key, ext)''')
+    memes = MemeDb(bot.config['bot']['dbfile'])
 
     bot.log("Starting comment stream...")
     last_restart = time.time()
@@ -199,10 +185,9 @@ while True:
 
                 url = random.choice(urls)
                 commentlinks[linktext] = url
-                c.execute('''INSERT INTO matches(subreddit, thread_id, key, trigger, ext, url, trigger_id, was_reply, ts) VALUES(?,?,?,?,?,?,?,?,?)''',
-                    (comment.subreddit.display_name, comment.link_id, imagekey, key, ext, url, comment.id, 0, ts))
+                memes.addMatch(comment, key, ext, ts, imagekey, url)
             else:
-              c.execute('''INSERT INTO candidates(key, ext, cid, ts) VALUES(?,?,?,?)''', (key, ext, comment.id, ts))
+              memes.addCandidate(comment, key, ext, ts)
               bot.log(u"\nPossible new image for %s\n%s",(comment.permalink.decode('utf-8'), u' '.join([m.decode('utf-8') for m in match])))
           
           if len(commentlinks):
@@ -227,8 +212,7 @@ while True:
                 )
 
                 bot.r.redditor(comment.author).message('I\'m glad you like me, but...',message,raise_captcha_exception=True)
-                c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
-                    (comment.id, message, time.time()))
+                memes.addComment(comment, message)
                 continue
 
             replytext = form_reply(commentlinks)
@@ -251,8 +235,7 @@ while True:
               bot.log(str(e.response.headers))
               raise e
 
-            c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
-                (comment.id, replytext, time.time()))
+            memes.addComment(comment, replytext)
 
       duration = time.time() - start
       totaltime += duration
