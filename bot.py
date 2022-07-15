@@ -202,8 +202,8 @@ while True:
                 c.execute('''INSERT INTO matches(subreddit, thread_id, key, trigger, ext, url, trigger_id, was_reply, ts) VALUES(?,?,?,?,?,?,?,?,?)''',
                     (comment.subreddit.display_name, comment.link_id, imagekey, key, ext, url, comment.id, 0, ts))
             else:
-              bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, ' '.join(match)))
               c.execute('''INSERT INTO candidates(key, ext, cid, ts) VALUES(?,?,?,?)''', (key, ext, comment.id, ts))
+              bot.log(u"\nPossible new image for %s\n%s",(comment.permalink.decode('utf-8'), u' '.join([m.decode('utf-8') for m in match])))
           
           if len(commentlinks):
             if(not comment.is_root):
@@ -245,6 +245,11 @@ while True:
                 time.sleep(sleeptime)
                 bot.log("Re-commenting on %s",(comment.permalink))
                 comment.reply(replytext)
+            except prawcore.exceptions.ResponseException, e:
+              bot.log("Got response error: %s", (e))
+              bot.log(e.response.text)
+              bot.log(str(e.response.headers))
+              raise e
 
             c.execute('''INSERT INTO comments(cid, text, ts) VALUES(?,?,?)''',
                 (comment.id, replytext, time.time()))
