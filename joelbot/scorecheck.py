@@ -45,7 +45,7 @@ class ScoreCheck:
     log("COMMENT SCORE CHECK CYCLE STARTED")
     user = self.bot.r.redditor(self.bot.config['account']['username'])
             
-    for c in user.stream.comments():
+    for c in user.comments.new(limit=None):
       
       # Sum votes for each subreddit
       sub = c.subreddit.display_name
