@@ -188,7 +188,7 @@ while True:
                 memes.addMatch(comment, key, ext, ts, imagekey, url)
             else:
               memes.addCandidate(comment, key, ext, ts)
-              bot.log(u"\nPossible new image for %s\n%s",(comment.permalink.decode('utf-8'), u' '.join([m.decode('utf-8') for m in match])))
+              bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, u' '.join(match)))
           
           if len(commentlinks):
             if(not comment.is_root):

@@ -5,6 +5,6 @@ from memedb import MemeDb
 bot = BaseBot()
 db = MemeDb(bot.config['bot']['dbfile'])
 
-for candidate in db.c.execute("SELECT * FROM candidates ORDER BY ts DESC LIMIT 20"):
+for candidate in db.c.execute("SELECT * FROM candidates ORDER BY ts DESC LIMIT 5"):
     comment = bot.r.comment(candidate['cid'])
-    print(candidate['key'], "https://reddit.com/%s" % (comment.permalink,))
+    bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, u'testing'))

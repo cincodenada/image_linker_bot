@@ -10,6 +10,7 @@ import sys
 import re
 import urlparse
 import random
+import codecs
 
 from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
@@ -93,13 +94,12 @@ class BaseBot:
   def log(self, format, params=None, stderr=False,newline=True):
     prefix = time.strftime('%Y-%m-%d %H:%M:%S')
     logline = prefix + " " + (format if params is None else (format % params))
-    if(newline and stderr):
+    if(newline):
       logline += "\n"
 
-    if(stderr):
-      sys.stderr.write(logline)
-    else:
-      print(logline)
+    # Some arcane nonsense to get Python2 to always output utf-8 even if the terminal encoding is not that
+    out = sys.stderr if stderr else sys.stdout
+    codecs.getwriter('utf-8')(out).write(logline)
 
   def id_string(self):
     return "{:s} ({:s}) {:f}".format(
