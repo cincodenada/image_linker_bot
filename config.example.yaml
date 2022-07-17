@@ -28,26 +28,27 @@ bot:
     cleanup_time: 900  #Clean up every 15 minutes
     inbox_time: 900  #Check inbox every 15 minutes
     imagethread: thread_id # Thread to update with imagelist
+    status_template: status_template.html
 
     # Image extension handling
-    extensions:
-        - jpeg
-        - jpg
-        - png
-        - gif
-        - bmp
-        - avi
-        - tiff
-        - tif
-    animated_extensions:
-        - gif
-        - avi
-    switchable_extensions:
-        - jpeg
-        - jpg
-        - gif
-        - png
-    status_template: status_template.html
+    matching:
+        extensions:
+            - jpeg
+            - jpg
+            - png
+            - gif
+            - bmp
+            - avi
+            - tiff
+            - tif
+        animated_extensions:
+            - gif
+            - avi
+        switchable_extensions:
+            - jpeg
+            - jpg
+            - gif
+            - png
 
     # Ignore list functionality
     ignore_messages:

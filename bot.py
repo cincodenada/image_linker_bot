@@ -115,7 +115,7 @@ bot.log("Loaded image map:")
 pprint(imagemap.get_dict())
 sys.stdout.flush()
 
-ext_list = '|'.join(bot.config['bot']['extensions'] + bot.config['bot']['animated_extensions'])
+ext_list = '|'.join(bot.config['bot']['matching']['extensions'] + bot.config['bot']['matching']['animated_extensions'])
 maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
 generate_statuspage(bot)
