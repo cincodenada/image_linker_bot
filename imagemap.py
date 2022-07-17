@@ -1,27 +1,47 @@
 #!/usr/bin/python
 # vim: sw=2 ts=2 sts=2 et :
 import time
+from difflib import get_close_matches
 
 class ImageMap:
   as_dict = {}
   as_tuples = []
   hidden_keys = []
 
-  def __init__(self, config, anim_list = [], switch_list = []):
-    self.images = config['images']
-    self.aliases = config['aliases']
-    self.hidden_keys = config['hidden']
-    self.anim_list = anim_list
-    self.switch_list = switch_list
+  def __init__(self, meme_config, match_config):
+    self.images = meme_config['images']
+    self.aliases = meme_config['aliases']
+    self.hidden_keys = meme_config['hidden']
+    self.anim_list = match_config['animated_extensions']
+    self.switch_list = match_config['switchable_extensions']
+    self.fuzzy_min_len = match_config['fuzzy_min_len']
+    self.fuzzy_threshold = match_config['fuzzy_threshold']
+
+  def fuzzy_match(self, searchkey):
+    if searchkey in self.get_dict():
+      return searchkey
+
+    if len(searchkey) >= self.fuzzy_min_len:
+      fuzzy_matches = get_close_matches(searchkey, self.get_dict().keys(), 1, self.fuzzy_threshold)
+      if len(fuzzy_matches):
+        return fuzzy_matches[0]
+
+    return None
+
+  def get_urls(self, searchkey):
+    entry = self.get_dict()[searchkey]
+    if isinstance(urls, list):
+      return entry
+    else:
+      # If it's not a list, it's an alias we need to follow
+      searchkey = entry.lower()
+      return self.get_dict()[searchkey]
 
   def get(self, searchkey, matchext = ''):
-    if searchkey in self.get_dict():
-      urls = self.get_dict()[searchkey]
-      #Follow aliases
-      if not isinstance(urls, list):
-        searchkey = urls.lower()
-        urls = self.get_dict()[searchkey]
+    match = self.fuzzy_match(searchkey)
 
+    if match:
+      urls = self.get_urls(match)
       if matchext:
         urls = self.get_closest(urls, matchext)
 

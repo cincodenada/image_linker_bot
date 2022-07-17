@@ -78,7 +78,7 @@ if not imageconf:
   shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
   bot.log('Loaded imagelist from file')
 
-imagemap = ImageMap(imageconf, bot.config['bot']['animated_extensions'], bot.config['bot']['switchable_extensions'])
+imagemap = ImageMap(imageconf, bot.config['bot']['matching'])
 
 markdown = imagemap.get_formatted()
 
