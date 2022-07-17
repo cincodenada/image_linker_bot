@@ -14,8 +14,8 @@ class ImageMap:
     self.hidden_keys = meme_config['hidden']
     self.anim_list = match_config['animated_extensions']
     self.switch_list = match_config['switchable_extensions']
-    self.fuzzy_min_len = match_config['fuzzy_min_len']
-    self.fuzzy_threshold = match_config['fuzzy_threshold']
+    self.fuzzy_min_len = match_config.get('fuzzy_min_len', 5)
+    self.fuzzy_threshold = match_config.get('fuzzy_threshold', 0.6)
 
   def fuzzy_match(self, searchkey):
     if searchkey in self.get_dict():
@@ -30,22 +30,22 @@ class ImageMap:
 
   def get_urls(self, searchkey):
     entry = self.get_dict()[searchkey]
-    if isinstance(urls, list):
-      return entry
-    else:
+    if not isinstance(entry, list):
       # If it's not a list, it's an alias we need to follow
       searchkey = entry.lower()
-      return self.get_dict()[searchkey]
+      entry = self.get_dict()[searchkey]
+
+    return (entry, searchkey)
 
   def get(self, searchkey, matchext = ''):
     match = self.fuzzy_match(searchkey)
 
     if match:
-      urls = self.get_urls(match)
+      (urls, matched) = self.get_urls(match)
       if matchext:
         urls = self.get_closest(urls, matchext)
 
-      return (urls, searchkey)
+      return (urls, matched)
     else:
       return (False, False)
 
