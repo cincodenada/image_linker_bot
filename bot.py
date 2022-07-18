@@ -172,9 +172,13 @@ while True:
 
           ts = time.time()
           for match in matches:
-            #Add the match to the list if it's not a dup
+            # Add the match to the list if it's not a dup
             (prefix, key, ext) = match
-            searchkey = key.lower().replace('_','')
+            # Strip out underscores/hyphens
+            searchkey = key.lower().replace('_','').replace('-','')
+            # Remove "meme" from the end
+            if searchkey.endswith('meme'):
+              searchkey = searchkey[:-4]
             (urls, imagekey) = imagemap.get(searchkey, ext)
             if urls:
               if imagekey not in foundkeys:
