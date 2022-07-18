@@ -37,8 +37,9 @@ def form_reply(link_list, withfooter = True):
   return reply
 
 def signal_handler(signum, frame):
+  global bot
   if(signum == signal.SIGHUP):
-      load_settings()
+      bot.load_settings()
 
 def generate_statuspage(bot):
   global imagemap
