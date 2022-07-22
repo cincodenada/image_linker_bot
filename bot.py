@@ -22,7 +22,7 @@ from joelbot.util import log, get_sender
 from imagemap import ImageMap
 from memedb import MemeDb
 
-def form_reply(link_list, withfooter = True):
+def form_reply(link_list, footer = 'footer'):
   lines = []
   for (text, link) in link_list.iteritems():
     lines.append("[%s](%s)  " % (text, link))
@@ -33,8 +33,8 @@ def form_reply(link_list, withfooter = True):
       lines.append("^(and, to fulfill the laws of reddit:) ^[%s](%s)  " % ('sinepastaht.gif', revurl))
 
   reply = "\n".join(lines)
-  if(withfooter):
-    reply += "\n\n" + bot.config['bot']['footer']
+  if(footer):
+    reply += "\n\n" + bot.config['bot'][footer]
   return reply
 
 def signal_handler(signum, frame):
@@ -213,7 +213,7 @@ while True:
                 #Construct our message
                 message = 'Here %s you wanted: %s\n\n%s' % (
                   plural,
-                  form_reply(commentlinks, False),
+                  form_reply(commentlinks, None),
                   bot.config['bot']['toomuch']
                 )
 
@@ -228,6 +228,10 @@ while True:
             except praw.exceptions.APIException, e:
               if(e.error_type == "TOO_OLD"):
                 log("Comment too old!")
+              elif(e.error_type == "SUBREDDIT_OUTBOUND_LINKING_DISALLOWED"):
+                log("Commenting on %s without link:",(comment.permalink))
+                replytext = form_reply(commentlinks, 'nolink_footer')
+                comment.reply(replytext)
               else:
                 # Otherwise assume it's rate limiting...without a sleep time?...ugh
                 sleeptime = 2
