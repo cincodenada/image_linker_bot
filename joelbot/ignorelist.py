@@ -14,12 +14,12 @@ class IgnoreList():
     self.c = self.conn.cursor()
 
     self.c.execute('''CREATE TABLE IF NOT EXISTS {0}
-        (username TEXT, request_id TEXT, {0}_date INTEGER)'''.format(self.key))
+        (username TEXT, request_id TEXT, {0}_date INTEGER, reason TEXT)'''.format(self.key))
     self.c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS {0}_user ON {0}(username)'''.format(self.key))
 
-  def ignore_sender(self, name, ref_id=None):
-    self.c.execute('''INSERT OR REPLACE INTO {0}(username, request_id, {0}_date) VALUES(?,?,?)'''.format(self.key),
-        (name, id, time.time()))
+  def ignore_sender(self, name, ref_id=None, reason=None):
+    self.c.execute('''INSERT OR REPLACE INTO {0}(username, request_id, reason, {0}_date) VALUES(?,?,?,?)'''.format(self.key),
+        (name, id, reason, time.time()))
 
   def unignore_sender(self, name):
     self.c.execute('''DELETE FROM {0} WHERE username=?'''.format(self.key), (name,))

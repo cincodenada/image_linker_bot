@@ -192,28 +192,38 @@ class JoelBot(BaseBot):
         return False
 
       if(self.inbox.add_message(m)):
-        (reply, subject) = self.do_command(m.body, get_sender(m), m.name)
-        if reply:
-          self.reply_to(m, subject, reply)
+        action = self.get_command(m.body)
+        if action:
+          self.do_command(action, get_sender(m), m.name)
+          config = self.config['bot']['actions'][action]
+          if config['reply']:
+            self.reply_to(m, config.get('subject'), config['reply'])
       else:
         log("Found duplicate message, stopping!")
         return False
 
-  def do_command(self, message, sender, ref_id):
-    if(self.matches_action(message, 'ignore')):
-      log("Ignoring {:s}...".format(sender))
-      self.ignores.ignore_sender(sender, ref_id)
-      return (self.config['bot'].get('ignore_reply'), 'Ignore Request')
+  def get_command(self, message):
+    for action in self.config['bot']['actions'].items():
+      if(self.matches_action(message, action)):
+        return action
+    return None
 
-    elif(self.matches_action(message, 'unignore')):
-      log("Unignoring {:s}...".format(sender))
-      self.ignores.unignore_sender(sender)
-      return (self.config['bot'].get('unignore_reply'), 'Unignore Request')
+  def do_command(self, action, target, ref_id=None, reason=None):
+    if action == 'ignore':
+      log("Ignoring {:s}...".format(target))
+      self.ignores.ignore_sender(target, ref_id, reason or "message")
 
-    elif(m.subreddit and self.matches_action(message, 'banned')):
-      log("Recording ban from {:s}...".format(sender))
-      self.bans.ignore_sender(sender, ref_id)
-      return (self.config['bot'].get('banned_reply'), 'Subreddit Ban')
+    elif action == 'unignore':
+      log("Unignoring {:s}...".format(target))
+      self.ignores.unignore_sender(target)
+
+    elif action == 'ban':
+      log("Recording ban from {:s}...".format(target))
+      self.bans.ignore_sender(target, ref_id, reason or "ban")
+
+    elif action == 'softban':
+      log("Recording soft ban from {:s}...".format(target))
+      self.bans.ignore_sender(target, ref_id, reason or "softban")
 
   def reply_to(self, m, subject, reply):
     if(m.subreddit):

@@ -18,7 +18,7 @@ import traceback
 import inspect
 
 from joelbot import JoelBot
-from joelbot.util import log
+from joelbot.util import log, get_sender
 from imagemap import ImageMap
 from memedb import MemeDb
 
@@ -238,8 +238,11 @@ while True:
             except prawcore.exceptions.ResponseException, e:
               log("Got response error: %s", (e))
               log(e.response.text)
-              log(str(e.response.headers))
-              raise e
+              if e.response.status_code == 403:
+                # TODO: get_sender being external here is ick
+                bot.do_command('ban', get_sender(comment.subreddit), reason="comment_forbidden")
+              else:
+                raise e
 
             memes.addComment(comment, replytext)
 
