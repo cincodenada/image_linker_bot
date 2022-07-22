@@ -165,6 +165,9 @@ class JoelBot(BaseBot):
 
     return False
 
+  def matches_action(self, message, action):
+    return any([match in message for match in self.config['bot']['{}_messages'.format(action)])
+
   def save_seen(self):
     self.comment_stream.save_state()
 
@@ -198,12 +201,12 @@ class JoelBot(BaseBot):
         return False
 
       if(self.inbox.add_message(m)):
-        if(m.body in self.config['bot']['ignore_messages']):
+        if(self.matches_action(m.body, 'ignore')):
           self.log("Ignoring {:s}...".format(m.author.name))
           self.ignores.ignore_sender(m)
           if('ignore_reply' in self.config['bot']):
             self.reply_to(m, 'Ignore Request', self.config['bot']['ignore_reply'])
-        elif(m.body in self.config['bot']['unignore_messages']):
+        elif(self.matches_action(m.body, 'unignore')):
           self.log("Unignoring {:s}...".format(m.author.name))
           self.ignores.unignore_sender(m)
           if('unignore_reply' in self.config['bot']):
