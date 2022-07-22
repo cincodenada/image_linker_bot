@@ -2,7 +2,7 @@
 # vim: sw=2 ts=2 sts=2 et :
 import sqlite3
 import time
-from util import get_sender
+from .util import get_sender
 
 class CommentStore():
   def __init__(self, dbfilename):

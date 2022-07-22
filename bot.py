@@ -18,6 +18,7 @@ import traceback
 import inspect
 
 from joelbot import JoelBot
+from joelbot.util import log
 from imagemap import ImageMap
 from memedb import MemeDb
 
@@ -60,24 +61,24 @@ global bot
 global imagemap
 
 bot = JoelBot('all')
-bot.log("\n", stderr=True)
-bot.log("Starting up...", stderr=True)
+log("\n", stderr=True)
+log("Starting up...", stderr=True)
 
 signal.signal(signal.SIGHUP,signal_handler)
 
 #Load image map, first from wiki
 try:
   imageconf = bot.get_wiki_yaml('botconf/imagelist')
-  bot.log('Loaded imagelist from wiki')
+  log('Loaded imagelist from wiki')
 except Exception as e:
-  bot.log("Couldn't load imagelist from wiki: " + str(sys.exc_info()[0]))
+  log("Couldn't load imagelist from wiki: " + str(sys.exc_info()[0]))
   imageconf = None
 
 # Fall back to local file
 if not imageconf:
   imageconf = yaml.load(open('imagelist.yaml'))
   shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
-  bot.log('Loaded imagelist from file')
+  log('Loaded imagelist from file')
 
 imagemap = ImageMap(imageconf, bot.config['bot']['matching'])
 
@@ -92,11 +93,11 @@ try:
 
   if(curmd != markdown):
     bot.write_wiki('imagelist', markdown, 'Updating image list')
-    bot.log("Wrote updated imagelist to wiki")
+    log("Wrote updated imagelist to wiki")
 except Exception as e:
-  bot.log("Couldn't update wiki page: " + str(sys.exc_info()[0]))
+  log("Couldn't update wiki page: " + str(sys.exc_info()[0]))
 
-  bot.log("Updating files...")
+  log("Updating files...")
   # Fall back to shuffling files around
   shutil.copy('imagelist.md','imagelist.%d.md' % (time.time()))
   shutil.copy('imagelist.md','imagelist.previous.md')
@@ -112,7 +113,7 @@ if('imagethread' in bot.config['bot']):
     header = header.group(1)
     imagepost.edit("%s---\n%s" % (header, markdown))
 
-bot.log("Loaded image map:")
+log("Loaded image map:")
 pprint(imagemap.get_dict())
 sys.stdout.flush()
 
@@ -141,21 +142,21 @@ while True:
 
       #Be safe here cause we can spin into disk-eating death if we die before sleeping
       try:
-        bot.log("Restarted too quickly, refreshing comments and backing off to %d seconds...", sleep_secs)
+        log("Restarted too quickly, refreshing comments and backing off to %d seconds...", sleep_secs)
         if(comment and hasattr(comment, '__dict__')):
-          bot.log("Last comment: %s", pformat(comment.__dict__))
+          log("Last comment: %s", pformat(comment.__dict__))
         else:
-          bot.log("Last comment: %s", pformat(comment))
+          log("Last comment: %s", pformat(comment))
       except Exception, e:
         print traceback.format_exc()
     else:
       sleep_secs = 5
     time.sleep(sleep_secs)
 
-    bot.log("Opening database...")
+    log("Opening database...")
     memes = MemeDb(bot.config['bot']['dbfile'])
 
-    bot.log("Starting comment stream...")
+    log("Starting comment stream...")
     last_restart = time.time()
     for comment in bot.comment_stream:
       start = time.time();
@@ -193,14 +194,14 @@ while True:
                 memes.addMatch(comment, key, ext, ts, imagekey, url)
             else:
               memes.addCandidate(comment, key, ext, ts)
-              bot.log(u"\nPossible new image for %s\n%s",(comment.permalink, u' '.join(match)))
+              log(u"\nPossible new image for %s\n%s",(comment.permalink, u' '.join(match)))
           
           if len(commentlinks):
             if(not comment.is_root):
               parent = bot.r.comment(comment.parent_id[3:])
               subreddit = comment.subreddit.display_name.lower()
               if(parent.author and parent.author.name == bot.config['account']['username'] and subreddit != bot.config['account']['username']):
-                bot.log("Sending warning to %s for reply-reply...",(comment.author))
+                log("Sending warning to %s for reply-reply...",(comment.author))
 
                 #Always with the plurals
                 plural = 'are the images'
@@ -222,22 +223,22 @@ while True:
 
             replytext = form_reply(commentlinks)
             try:
-              bot.log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
+              log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
               comment.reply(replytext)
             except praw.exceptions.APIException, e:
               if(e.error_type == "TOO_OLD"):
-                bot.log("Comment too old!")
+                log("Comment too old!")
               else:
                 # Otherwise assume it's rate limiting...without a sleep time?...ugh
                 sleeptime = 2
-                bot.log("Rate limit exceeded, sleeping %d seconds and trying again...",(sleeptime))
+                log("Rate limit exceeded, sleeping %d seconds and trying again...",(sleeptime))
                 time.sleep(sleeptime)
-                bot.log("Re-commenting on %s",(comment.permalink))
+                log("Re-commenting on %s",(comment.permalink))
                 comment.reply(replytext)
             except prawcore.exceptions.ResponseException, e:
-              bot.log("Got response error: %s", (e))
-              bot.log(e.response.text)
-              bot.log(str(e.response.headers))
+              log("Got response error: %s", (e))
+              log(e.response.text)
+              log(str(e.response.headers))
               raise e
 
             memes.addComment(comment, replytext)
@@ -246,9 +247,9 @@ while True:
       totaltime += duration
       numsamples += 1
       if(numchecked % update_period == 0):
-        bot.log("\rChecked %d comments...",(numchecked),stderr=True,newline=False)
+        log("\rChecked %d comments...",(numchecked),stderr=True,newline=False)
       if(numsamples >= maxsamples):
-        bot.log("Average processing time of last %d comments: %.2f ms",(numsamples, totaltime/numsamples*1000))
+        log("Average processing time of last %d comments: %.2f ms",(numsamples, totaltime/numsamples*1000))
         numsamples = 0
         totaltime = 0
       
@@ -260,9 +261,9 @@ while True:
   except prawcore.exceptions.OAuthException:
     bot.refresh_oauth()
   except KeyboardInterrupt:
-    bot.log("Shutting down after scanning %d comments...",(numchecked))
+    log("Shutting down after scanning %d comments...",(numchecked))
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
   except Exception, e:
-    bot.log(u"Error!")
+    log(u"Error!")
     print traceback.format_exc()

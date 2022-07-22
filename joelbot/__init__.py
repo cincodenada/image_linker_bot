@@ -10,13 +10,12 @@ import sys
 import re
 import urlparse
 import random
-import codecs
 
 from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
 from unseencomments import UnseenComments
 from commentstore import CommentStore
-from util import log, add_r, get_sender
+from .util import log, add_r, get_sender
 
 class BaseBot:
   max_retries = 50
