@@ -3,7 +3,9 @@
 import sqlite3
 import time
 import sys
-from util import success, warn, log, fail, function_timeout
+
+from .util import success, warn, scorelog as log, fail, function_timeout
+
 try:
   from quantile import quantile
   have_quantile = True
