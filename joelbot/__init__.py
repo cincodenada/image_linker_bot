@@ -193,25 +193,28 @@ class JoelBot(BaseBot):
         return False
 
       if(self.inbox.add_message(m)):
-        sender = get_sender(m)
-        if(self.matches_action(m.body, 'ignore')):
-          log("Ignoring {:s}...".format(sender))
-          self.ignores.ignore_sender(sender, m.name)
-          if('ignore_reply' in self.config['bot']):
-            self.reply_to(m, 'Ignore Request', self.config['bot']['ignore_reply'])
-        elif(self.matches_action(m.body, 'unignore')):
-          log("Unignoring {:s}...".format(sender))
-          self.ignores.unignore_sender(sender)
-          if('unignore_reply' in self.config['bot']):
-            self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
-        elif(m.subreddit and self.matches_action(m.body, 'banned')):
-          log("Recording ban from {:s}...".format(sender))
-          self.bans.ignore_sender(sender, m.name)
-          if('ban_reply' in self.config['bot']):
-            self.reply_to(m, 'Subreddit Ban', self.config['bot']['ban_reply'])
+        (reply, subject) = self.do_command(m.body, get_sender(m), m.name)
+        if reply:
+          self.reply_to(m, subject, reply)
       else:
         log("Found duplicate message, stopping!")
         return False
+
+  def do_command(self, message, sender, ref_id):
+    if(self.matches_action(message, 'ignore')):
+      log("Ignoring {:s}...".format(sender))
+      self.ignores.ignore_sender(sender, ref_id)
+      return (self.config['bot'].get('ignore_reply'), 'Ignore Request')
+
+    elif(self.matches_action(message, 'unignore')):
+      log("Unignoring {:s}...".format(sender))
+      self.ignores.unignore_sender(sender)
+      return (self.config['bot'].get('unignore_reply'), 'Unignore Request')
+
+    elif(m.subreddit and self.matches_action(message, 'banned')):
+      log("Recording ban from {:s}...".format(sender))
+      self.bans.ignore_sender(sender, ref_id)
+      return (self.config['bot'].get('banned_reply'), 'Subreddit Ban')
 
   def reply_to(self, m, subject, reply):
     if(m.subreddit):
