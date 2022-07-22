@@ -24,7 +24,7 @@ class IgnoreList():
   def unignore_sender(self, m):
     self.c.execute('''DELETE FROM {0} WHERE username=?'''.format(self.key), (m.author.name,))
 
-  def check_ignored(self, username):
+  def is_ignored(self, name):
     self.c.execute('''SELECT username FROM {0} WHERE username=? LIMIT 1'''.format(self.key), (username,))
     user = self.c.fetchone();
     return (user is not None)

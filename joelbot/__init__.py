@@ -159,7 +159,7 @@ class JoelBot(BaseBot):
       return True
 
     #Check user ignore list
-    if self.ignores.check_ignored(comment.author.name):
+    if self.ignores.is_ignored(comment.author.name):
       self.log("Ignoring user %s",(comment.author.name))
       return True
 
