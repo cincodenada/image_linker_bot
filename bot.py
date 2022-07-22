@@ -240,7 +240,7 @@ while True:
               log(e.response.text)
               if e.response.status_code == 403:
                 # TODO: get_sender being external here is ick
-                bot.do_command('ban', get_sender(comment.subreddit), reason="comment_forbidden")
+                bot.do_command('ban', get_sender(comment), reason="comment_forbidden")
               else:
                 raise e
 

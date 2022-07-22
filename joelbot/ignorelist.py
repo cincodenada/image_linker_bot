@@ -19,7 +19,7 @@ class IgnoreList():
 
   def ignore_sender(self, name, ref_id=None, reason=None):
     self.c.execute('''INSERT OR REPLACE INTO {0}(username, request_id, reason, {0}_date) VALUES(?,?,?,?)'''.format(self.key),
-        (name, id, reason, time.time()))
+        (name, ref_id, reason, time.time()))
 
   def unignore_sender(self, name):
     self.c.execute('''DELETE FROM {0} WHERE username=?'''.format(self.key), (name,))
