@@ -201,14 +201,15 @@ class JoelBot(BaseBot):
         return False
 
       if(self.inbox.add_message(m)):
+        sender = m.author.name
         if(self.matches_action(m.body, 'ignore')):
-          self.log("Ignoring {:s}...".format(m.author.name))
-          self.ignores.ignore_sender(m)
+          self.log("Ignoring {:s}...".format(sender))
+          self.ignores.ignore_sender(sender, m.name)
           if('ignore_reply' in self.config['bot']):
             self.reply_to(m, 'Ignore Request', self.config['bot']['ignore_reply'])
         elif(self.matches_action(m.body, 'unignore')):
-          self.log("Unignoring {:s}...".format(m.author.name))
-          self.ignores.unignore_sender(m)
+          self.log("Unignoring {:s}...".format(sender))
+          self.ignores.unignore_sender(sender)
           if('unignore_reply' in self.config['bot']):
             self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
       else:
