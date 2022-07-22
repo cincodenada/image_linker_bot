@@ -16,7 +16,7 @@ from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
 from unseencomments import UnseenComments
 from commentstore import CommentStore
-from util import add_r, get_sender
+from util import log, add_r, get_sender
 
 class BaseBot:
   max_retries = 50
@@ -24,7 +24,7 @@ class BaseBot:
 
   def __init__(self, subreddit=None, config_file='config.yaml', useragent = 'default', skip_remote_config=False):
     #Load config and set up
-    self.log("Logging in...")
+    log("Logging in...")
     self.config = yaml.load(open(config_file))
     self.start_time = time.time()
 
@@ -38,10 +38,10 @@ class BaseBot:
           break
         except praw.exceptions.APIException:
           self.backoff *= 2
-          self.log("Error logging in! Trying again in {} seconds...".format(self.backoff), stderr=True)
+          log("Error logging in! Trying again in {} seconds...".format(self.backoff), stderr=True)
         time.sleep(self.backoff)
     else:
-      self.log("Error! Password login no longer supported!", stderr=True)
+      log("Error! Password login no longer supported!", stderr=True)
       sys.exit()
 
   def auth_oauth(self):
@@ -71,8 +71,8 @@ class BaseBot:
       "permanent"
     )
 
-    self.log('Go to the following URL, copy the URL that you are redirected to, then come back and paste it here:')
-    self.log(auth_url)
+    log('Go to the following URL, copy the URL that you are redirected to, then come back and paste it here:')
+    log(auth_url)
     redirect_url = raw_input("Redirected URL: ")
 
     urlparts = urlparse.urlsplit(redirect_url)
@@ -91,16 +91,6 @@ class BaseBot:
       return None
 
     return self.refresh_token
-
-  def log(self, format, params=None, stderr=False,newline=True):
-    prefix = time.strftime('%Y-%m-%d %H:%M:%S')
-    logline = prefix + " " + (format if params is None else (format % params))
-    if(newline):
-      logline += "\n"
-
-    # Some arcane nonsense to get Python2 to always output utf-8 even if the terminal encoding is not that
-    out = sys.stderr if stderr else sys.stdout
-    codecs.getwriter('utf-8')(out).write(logline)
 
   def id_string(self):
     return "{:s} ({:s}) {:f}".format(
@@ -124,12 +114,12 @@ class JoelBot(BaseBot):
     self.bans = IgnoreList(self.config['bot']['dbfile'], 'ban')
 
   def load_settings(self):
-    self.log("Reloading config...")
+    log("Reloading config...")
     sys.stdout.flush()
     self.config = yaml.load(open('config.yaml'))
 
     #Load banlist
-    self.log("Loading banlists...")
+    log("Loading banlists...")
     sys.stdout.flush()
     bottiquette = self.r.subreddit('Bottiquette').wiki['robots_txt_json']
     banlist = json.loads(bottiquette.content_md)
@@ -143,11 +133,11 @@ class JoelBot(BaseBot):
           if not (line.strip() == '' or line.startswith('#'))]
     except prawcore.exceptions.ResponseException as e:
       print e
-      self.log("Couldn't load bot-specific banlist")
+      log("Couldn't load bot-specific banlist")
       mybans = []
 
     self.bans = [x.strip().lower() for x in (btqban + mybans)]
-    self.log("Ignoring subreddits: %s",(', '.join(self.bans)))
+    log("Ignoring subreddits: %s",(', '.join(self.bans)))
 
   def should_ignore(self, comment):
     #Don't post in bot-banned subreddits
@@ -162,7 +152,7 @@ class JoelBot(BaseBot):
 
     #Check user ignore list
     if self.ignores.is_ignored(comment.author.name):
-      self.log("Ignoring user %s",(comment.author.name))
+      log("Ignoring user %s",(comment.author.name))
       return True
 
     return False
@@ -199,28 +189,28 @@ class JoelBot(BaseBot):
     # TODO: Make continuous/stream-based?
     for m in self.r.inbox.messages(params={'after': last_tid}):
       if(last_message is not None and m.created < last_message['sent']):
-        self.log("Found old message, stopping!")
+        log("Found old message, stopping!")
         return False
 
       if(self.inbox.add_message(m)):
         sender = get_sender(m)
         if(self.matches_action(m.body, 'ignore')):
-          self.log("Ignoring {:s}...".format(sender))
+          log("Ignoring {:s}...".format(sender))
           self.ignores.ignore_sender(sender, m.name)
           if('ignore_reply' in self.config['bot']):
             self.reply_to(m, 'Ignore Request', self.config['bot']['ignore_reply'])
         elif(self.matches_action(m.body, 'unignore')):
-          self.log("Unignoring {:s}...".format(sender))
+          log("Unignoring {:s}...".format(sender))
           self.ignores.unignore_sender(sender)
           if('unignore_reply' in self.config['bot']):
             self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
         elif(m.subreddit and self.matches_action(m.body, 'banned')):
-          self.log("Recording ban from {:s}...".format(sender))
+          log("Recording ban from {:s}...".format(sender))
           self.bans.ignore_sender(sender, m.name)
           if('ban_reply' in self.config['bot']):
             self.reply_to(m, 'Subreddit Ban', self.config['bot']['ban_reply'])
       else:
-        self.log("Found duplicate message, stopping!")
+        log("Found duplicate message, stopping!")
         return False
 
   def reply_to(self, m, subject, reply):
