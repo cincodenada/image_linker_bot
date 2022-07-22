@@ -2,6 +2,7 @@
 # vim: sw=2 ts=2 sts=2 et :
 import sqlite3
 import time
+from util import get_sender
 
 class CommentStore():
   def __init__(self, dbfilename):
@@ -17,12 +18,8 @@ class CommentStore():
 
   def add_message(self, m):
     try:
-      if(m.subreddit):
-        self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
-            (m.name, m.subject, m.body, 'r/' + m.subreddit.name, m.created, time.time(), m.parent_id))
-      else:
-        self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
-            (m.name, m.subject, m.body, m.author.name, m.created, time.time(), m.parent_id))
+      self.c.execute('''INSERT INTO inbox(tid, subject, body, sender, sent, seen, parent_id) VALUES(?,?,?,?,?,?,?)''',
+          (m.name, m.subject, m.body, get_sender(m), m.created, time.time(), m.parent_id))
       return True
     except sqlite3.IntegrityError:
       return False

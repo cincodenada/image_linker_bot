@@ -16,6 +16,7 @@ from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
 from unseencomments import UnseenComments
 from commentstore import CommentStore
+from util import add_r, get_sender
 
 class BaseBot:
   max_retries = 50
@@ -119,7 +120,8 @@ class JoelBot(BaseBot):
     self.load_settings()
 
     self.inbox = CommentStore(self.config['bot']['dbfile'])
-    self.ignores = IgnoreList(self.config['bot']['dbfile'])
+    self.ignores = IgnoreList(self.config['bot']['dbfile'], 'ignore')
+    self.bans = IgnoreList(self.config['bot']['dbfile'], 'ban')
 
   def load_settings(self):
     self.log("Reloading config...")
@@ -149,9 +151,9 @@ class JoelBot(BaseBot):
 
   def should_ignore(self, comment):
     #Don't post in bot-banned subreddits
-    subreddit = comment.subreddit.display_name.lower()
-    if subreddit in self.bans:
-      self.log("Skipping banned subreddit %s",(subreddit))
+    subreddit = comment.subreddit.display_name
+    if subreddit.lower() in self.bans or self.bans.is_ignored(add_r(subreddit)):
+      log("Skipping banned subreddit %s",(subreddit))
       return True
 
     #Don't reply to self, just in case...
@@ -201,7 +203,7 @@ class JoelBot(BaseBot):
         return False
 
       if(self.inbox.add_message(m)):
-        sender = m.author.name
+        sender = get_sender(m)
         if(self.matches_action(m.body, 'ignore')):
           self.log("Ignoring {:s}...".format(sender))
           self.ignores.ignore_sender(sender, m.name)
@@ -212,6 +214,11 @@ class JoelBot(BaseBot):
           self.ignores.unignore_sender(sender)
           if('unignore_reply' in self.config['bot']):
             self.reply_to(m, 'Unignore Request', self.config['bot']['unignore_reply'])
+        elif(m.subreddit and self.matches_action(m.body, 'banned')):
+          self.log("Recording ban from {:s}...".format(sender))
+          self.bans.ignore_sender(sender, m.name)
+          if('ban_reply' in self.config['bot']):
+            self.reply_to(m, 'Subreddit Ban', self.config['bot']['ban_reply'])
       else:
         self.log("Found duplicate message, stopping!")
         return False
