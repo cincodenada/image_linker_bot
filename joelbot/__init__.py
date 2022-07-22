@@ -135,13 +135,13 @@ class JoelBot(BaseBot):
       log("Couldn't load bot-specific banlist")
       mybans = []
 
-    self.bans = [x.strip().lower() for x in (btqban + mybans)]
-    log("Ignoring subreddits: %s",(', '.join(self.bans)))
+    self.config_bans = [x.strip().lower() for x in (btqban + mybans)]
+    log("Ignoring subreddits: %s",(', '.join(self.config_bans)))
 
   def should_ignore(self, comment):
     #Don't post in bot-banned subreddits
     subreddit = comment.subreddit.display_name
-    if subreddit.lower() in self.bans or self.bans.is_ignored(add_r(subreddit)):
+    if subreddit.lower() in self.config_bans or self.bans.is_ignored(add_r(subreddit)):
       log("Skipping banned subreddit %s",(subreddit))
       return True
 
