@@ -4,7 +4,7 @@ import sqlite3
 import time
 import sys
 
-from .util import success, warn, scorelog as log, fail, function_timeout
+from .util import success, warn, log, fail, function_timeout
 
 try:
   from quantile import quantile
@@ -95,16 +95,16 @@ class ScoreCheck:
     urate = round(self.counts['upvoted'] / float(self.counts['total']) * 100)
     nrate = round(self.counts['unvoted'] / float(self.counts['total']) * 100)
     drate = round(self.counts['downvoted'] / float(self.counts['total']) * 100)
-    warn("Upvoted:      %s\t%s\b\b %%"%(self.counts['upvoted'],urate))
-    warn("Unvoted       %s\t%s\b\b %%"%(self.counts['unvoted'],nrate))
-    warn("Downvoted:    %s\t%s\b\b %%"%(self.counts['downvoted'],drate))
-    warn("Total:        %s"%self.counts['total'])
-    warn("Avg Score:    %f"%self.avg_score)
+    warn("Upvoted:      %s\t%s\b\b %%",(self.counts['upvoted'],urate))
+    warn("Unvoted       %s\t%s\b\b %%",(self.counts['unvoted'],nrate))
+    warn("Downvoted:    %s\t%s\b\b %%",(self.counts['downvoted'],drate))
+    warn("Total:        %s",self.counts['total'])
+    warn("Avg Score:    %f",self.avg_score)
     if have_quantile:
       quantspots = [0.25,0.5,0.75]
       score_list = sorted(self.score_map.values())
       quant = [quantile(score_list, q, issorted=True) for q in quantspots]
-      warn("Quantiles:    %.1f-%.1f-%.1f"%tuple(quant))
+      warn("Quantiles:    %.1f-%.1f-%.1f",tuple(quant))
 
     sys.stdout.flush()
 
