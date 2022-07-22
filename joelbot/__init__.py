@@ -21,7 +21,7 @@ class BaseBot:
   max_retries = 50
   backoff = 2
 
-  def __init__(self, subreddit=None, config_file='config.yaml', useragent = 'default', skip_remote_config=False):
+  def __init__(self, config_file='config.yaml', useragent = 'default', skip_remote_config=False):
     #Load config and set up
     log("Logging in...")
     self.config = yaml.load(open(config_file))
