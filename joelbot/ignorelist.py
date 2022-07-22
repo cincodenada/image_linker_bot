@@ -14,7 +14,7 @@ class IgnoreList():
     self.c = self.conn.cursor()
 
     self.c.execute('''CREATE TABLE IF NOT EXISTS {0}
-        (username TEXT, request_id TEXT, {0}_date INTEGER)'''.format(self.key)
+        (username TEXT, request_id TEXT, {0}_date INTEGER)'''.format(self.key))
     self.c.execute('''CREATE UNIQUE INDEX IF NOT EXISTS {0}_user ON {0}(username)'''.format(self.key))
 
   def ignore_sender(self, name, ref_id=None):

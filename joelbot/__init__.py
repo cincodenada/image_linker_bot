@@ -158,7 +158,7 @@ class JoelBot(BaseBot):
     return False
 
   def matches_action(self, message, action):
-    return any([match in message for match in self.config['bot']['{}_messages'.format(action)])
+    return any([match in message for match in self.config['bot']['{}_messages'.format(action)]])
 
   def save_seen(self):
     self.comment_stream.save_state()
