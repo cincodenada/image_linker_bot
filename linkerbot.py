@@ -129,9 +129,20 @@ class LinkerBot(JoelBot):
     if(self.should_ignore(comment)):
       return None
 
-    commentlinks = self.run_matches(matches)
-    if not commentlinks:
-      return None
+    ts = time.time()
+    commentlinks = collections.OrderedDict()
+    for imagekey, (key, ext, urls) in self.get_images(matches).iteritems():
+      if urls:
+        linktext = "%s.%s" % (key,ext)
+        if(len(prefix.strip()) > 0):
+          linktext = prefix + linktext
+
+        url = random.choice(urls)
+        commentlinks[linktext] = url
+        self.memes.addMatch(comment, key, ext, ts, imagekey, url)
+      else:
+        self.memes.addCandidate(comment, key, ext, ts)
+        log(u"\nPossible new image for %s\n%s %s %s",(comment.permalink, prefix, key, ext))
 
     return commentlinks
 
@@ -152,39 +163,24 @@ class LinkerBot(JoelBot):
     self.memes.addComment(comment, sent)
     return comment
 
-  def run_matches(self, matches):
-    ts = time.time()
-    commentlinks = collections.OrderedDict()
-    foundkeys = []
+  def get_images(self, matches):
+    results = collections.OrderedDict()
 
     for match in matches:
-      # Add the match to the list if it's not a dup
       (prefix, key, ext) = match
       # Strip out underscores/hyphens
       searchkey = key.lower().replace('_','').replace('-','')
       # Remove "meme" from the end
       if searchkey.endswith('meme'):
         searchkey = searchkey[:-4]
+
       (urls, imagekey) = self.imagemap.get(searchkey, ext)
-      if urls:
-        if imagekey not in foundkeys:
-          foundkeys.append(imagekey)
 
-          linktext = "%s.%s" % (key,ext)
-          if(len(prefix.strip()) > 0):
-            linktext = prefix + linktext
+      # Add the match to the list if it's not a dup
+      if imagekey not in results:
+        results[imagekey] = (key, ext, urls)
 
-          url = random.choice(urls)
-          commentlinks[linktext] = url
-          self.memes.addMatch(comment, key, ext, ts, imagekey, url)
-      else:
-        self.memes.addCandidate(comment, key, ext, ts)
-        log(u"\nPossible new image for %s\n%s",(comment.permalink, u' '.join(match)))
-
-    if len(commentlinks):
-      return commentlinks
-    else:
-      return None
+    return results
 
   def is_reply_reply(self, comment):
     if comment.is_root:
