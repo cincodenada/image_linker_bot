@@ -151,6 +151,8 @@ class LinkerBot(JoelBot):
     if not hasattr(comment, 'body'):
       raise EmptyBodyError(str(comment))
 
+    start = time.time()
+
     commentlinks = self.get_links(comment)
     if not commentlinks:
       return None
@@ -161,7 +163,7 @@ class LinkerBot(JoelBot):
       reply = self.reply(comment, commentlinks)
 
     self.memes.addComment(comment, sent)
-    return comment
+    return (comment, time.time() - start)
 
   def get_images(self, matches):
     results = collections.OrderedDict()

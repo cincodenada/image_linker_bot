@@ -20,11 +20,12 @@ signal.signal(signal.SIGHUP, handle_signal)
 bot = LinkerBot('all')
 sys.stdout.flush()
 
-numchecked = 0
-numsamples = 0
-maxsamples = 1000
+num_checked = 0
+num_samples = 0
+max_samples = 1000
 update_period = 100
-totaltime = 0
+total_overall = 0
+total_processing = 0
 
 sleep_secs = 5
 max_sleep = 2**16
@@ -63,20 +64,22 @@ while True:
     while True:
       start = time.time();
       try:
-        last_comment = bot.next()
-        numchecked += 1
+        (last_comment, processing_time) = bot.next()
+        num_checked += 1
       except EmptyBodyError, e:
         log("Comment without body: %s", e.message)
-      duration = time.time() - start
+      overall_time = time.time() - start
 
-      totaltime += duration
-      numsamples += 1
-      if(numchecked % update_period == 0):
-        log("\rChecked %d comments...",(numchecked),stderr=True,newline=False)
-      if(numsamples >= maxsamples):
-        log("Average processing time of last %d comments: %.2f ms",(numsamples, totaltime/numsamples*1000))
-        numsamples = 0
-        totaltime = 0
+      total_overall += overall_time
+      total_processing += processing_time
+      num_samples += 1
+      if(num_checked % update_period == 0):
+        log("\rChecked %d comments...",(num_checked),stderr=True,newline=False)
+      if(num_samples >= max_samples):
+        log("Average processing time of last %d comments: %.2f/%.2f ms",(num_samples, total_processing/num_samples*1000, total_overall/num_samples*1000))
+        num_samples = 0
+        total_overall = 0
+        total_processing = 0
 
       sys.stdout.flush()
 
@@ -87,7 +90,7 @@ while True:
     log("Refreshing auth...")
     bot.refresh_oauth()
   except KeyboardInterrupt:
-    log("Shutting down after scanning %d comments...",(numchecked))
+    log("Shutting down after scanning %d comments...",(num_checked))
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
   except Exception, e:
