@@ -63,7 +63,7 @@ while True:
     while True:
       start = time.time();
       try:
-        bot.next()
+        last_comment = bot.next()
         numchecked += 1
       except EmptyBodyError, e:
         log("Comment without body: %s", e.message)

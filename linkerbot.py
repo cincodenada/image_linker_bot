@@ -120,29 +120,39 @@ class LinkerBot(JoelBot):
         header = header.group(1)
         imagepost.edit("%s---\n%s" % (header, markdown))
 
+  def get_links(self, comment):
+    matches = self.imagemap.find_candidates(comment.body)
+    if not len(matches):
+      return None
+
+    # Do this here because it's a db call, don't want to do it unless we match
+    if(self.should_ignore(comment)):
+      return None
+
+    commentlinks = self.run_matches(matches)
+    if not commentlinks:
+      return None
+
+    return commentlinks
+
   def next(self):
     comment = self.comment_stream.next()
     if not hasattr(comment, 'body'):
       raise EmptyBodyError(str(comment))
 
-    matches = self.imagemap.find_candidates(comment.body)
-    if len(matches):
-      # Do this here because it's a db call, don't want to do it unless we match
-      if(self.should_ignore(comment)):
-        return
+    commentlinks = self.get_links(comment)
+    if not commentlinks:
+      return None
 
-      commentlinks = self.get_links(matches)
-      if not commentlinks:
-        return
+    if self.is_reply_reply(comment):
+      reply = self.reply_warn(comment, commentlinks)
+    else:
+      reply = self.reply(comment, commentlinks)
 
-      if self.is_reply_reply(comment):
-        reply = self.reply_warn(comment, commentlinks)
-      else:
-        reply = self.reply(comment, commentlinks)
+    self.memes.addComment(comment, sent)
+    return comment
 
-      self.memes.addComment(comment, sent)
-
-  def get_links(self, matches):
+  def run_matches(self, matches):
     ts = time.time()
     commentlinks = collections.OrderedDict()
     foundkeys = []
