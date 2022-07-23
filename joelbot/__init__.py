@@ -24,13 +24,18 @@ class BaseBot:
   def __init__(self, config_file='config.yaml', useragent = 'default', skip_remote_config=False):
     #Load config and set up
     log("Logging in...")
-    self.config = yaml.load(open(config_file))
+
+    allconfig = yaml.load(open(config_file))
+    self.config = allconfig['bot']
+    self.account_config = allconfig['account']
+    self.username = self.account_config['username']
+
     self.start_time = time.time()
 
     self.useragent = useragent
     self.r = None
 
-    if self.config['account']['oauth']:
+    if self.account_config['oauth']:
       while True:
         try:
           self.auth_oauth()
@@ -46,14 +51,14 @@ class BaseBot:
   def auth_oauth(self):
     if self.get_refresh_token():
       self.r = praw.Reddit(
-        user_agent = self.config['bot']['useragent'][self.useragent],
+        user_agent = self.config['useragent'][self.useragent],
         refresh_token = self.refresh_token,
-        **self.config['account']['oauth']
+        **self.account_config['oauth']
       )
     else:
       self.r = praw.Reddit(
-        user_agent = self.config['bot']['useragent'][self.useragent],
-        **self.config['account']['oauth']
+        user_agent = self.config['useragent'][self.useragent],
+        **self.account_config['oauth']
       )
       rt = self.authorize_oauth()
       if rt:
@@ -65,7 +70,7 @@ class BaseBot:
   def authorize_oauth(self):
     self.oauth_state = str(random.randint(0, 65000))
     auth_url = self.r.auth.url(
-      self.config['bot']['oauth_scopes'],
+      self.config['oauth_scopes'],
       self.oauth_state,
       "permanent"
     )
@@ -93,7 +98,7 @@ class BaseBot:
 
   def id_string(self):
     return "{:s} ({:s}) {:f}".format(
-      self.config['account']['username'],
+      self.username,
       self.useragent or 'default',
       self.start_time
     )
@@ -103,14 +108,14 @@ class JoelBot(BaseBot):
     BaseBot.__init__(self, **kwargs)
 
     if subreddit:
-      self.comment_stream = UnseenComments(self.r, subreddit, self.config['bot']['seen_len'])
+      self.comment_stream = UnseenComments(self.r, subreddit, self.config['seen_len'])
       self.subreddit = subreddit
 
     self.load_settings()
 
-    self.inbox = CommentStore(self.config['bot']['dbfile'])
-    self.ignores = IgnoreList(self.config['bot']['dbfile'], 'ignore')
-    self.bans = IgnoreList(self.config['bot']['dbfile'], 'ban')
+    self.inbox = CommentStore(self.config['dbfile'])
+    self.ignores = IgnoreList(self.config['dbfile'], 'ignore')
+    self.bans = IgnoreList(self.config['dbfile'], 'ban')
 
   def load_settings(self):
     log("Reloading config...")
@@ -146,7 +151,7 @@ class JoelBot(BaseBot):
       return True
 
     #Don't reply to self, just in case...
-    if comment.author.name == self.config['account']['username']:
+    if comment.author.name == self.username:
       return True
 
     #Check user ignore list
@@ -157,7 +162,7 @@ class JoelBot(BaseBot):
     return False
 
   def matches_action(self, message, action):
-    return any([match in message for match in self.config['bot']['{}_messages'.format(action)]])
+    return any([match in message for match in self.config['{}_messages'.format(action)]])
 
   def save_seen(self):
     self.comment_stream.save_state()
@@ -169,8 +174,8 @@ class JoelBot(BaseBot):
     sc.save_report()
 
   def get_template(self):
-    if('status_template' in self.config['bot']):
-      template = self.config['bot']['status_template']
+    if('status_template' in self.config):
+      template = self.config['status_template']
       if(template.find('\n') == -1):
         template = open(template, 'r').read()
       return template
@@ -195,7 +200,7 @@ class JoelBot(BaseBot):
         action = self.get_command(m.body)
         if action:
           self.do_command(action, get_sender(m), m.name)
-          config = self.config['bot']['actions'][action]
+          config = self.config['actions'][action]
           if config['reply']:
             self.reply_to(m, config.get('subject'), config['reply'])
       else:
@@ -203,7 +208,7 @@ class JoelBot(BaseBot):
         return False
 
   def get_command(self, message):
-    for action in self.config['bot']['actions'].items():
+    for action in self.config['actions'].items():
       if(self.matches_action(message, action)):
         return action
     return None
@@ -234,10 +239,10 @@ class JoelBot(BaseBot):
       m.reply(reply)
 
   def get_wiki(self, page):
-    return self.r.subreddit(self.config['bot']['subreddit']).wiki[page]
+    return self.r.subreddit(self.config['subreddit']).wiki[page]
 
   def write_wiki(self, page, content, reason=None):
-    return self.r.subreddit(self.config['bot']['subreddit']).wiki[page].edit(content, reason)
+    return self.r.subreddit(self.config['subreddit']).wiki[page].edit(content, reason)
 
   # Transform a wiki'd YAML into normal yaml and parse it
   def get_wiki_yaml(self, page):

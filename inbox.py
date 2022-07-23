@@ -10,9 +10,9 @@ bot = JoelBot('all',useragent='inbox')
 while True:
   try:
     bot.check_messages()
-    log("Sleeping for %d seconds...", bot.config['bot']['inbox_time'])
+    log("Sleeping for %d seconds...", bot.config['inbox_time'])
     sys.stdout.flush()
-    sleep(bot.config['bot']['inbox_time'])
+    sleep(bot.config['inbox_time'])
 
   except prawcore.exceptions.OAuthException:
     bot.auth_oauth()

@@ -34,7 +34,7 @@ def form_reply(link_list, footer = 'footer'):
 
   reply = "\n".join(lines)
   if(footer):
-    reply += "\n\n" + bot.config['bot'][footer]
+    reply += "\n\n" + bot.config[footer]
   return reply
 
 def signal_handler(signum, frame):
@@ -48,7 +48,7 @@ def generate_statuspage(bot):
   f = open('status.html', 'w')
   t_data = {
     'last_restarted': datetime.fromtimestamp(time.time()),
-    'config': bot.config,
+    'config': bot.allconfig,
     'num_keys': imagemap.num_keys(),
     'num_images': imagemap.num_images(),
     'imagelist': imagemap.get_tuples(),
@@ -80,7 +80,7 @@ if not imageconf:
   shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
   log('Loaded imagelist from file')
 
-imagemap = ImageMap(imageconf, bot.config['bot']['matching'])
+imagemap = ImageMap(imageconf, bot.config['matching'])
 
 markdown = imagemap.get_formatted()
 
@@ -106,8 +106,8 @@ except Exception as e:
   mdf.close()
 
 #Update the post
-if('imagethread' in bot.config['bot']):
-  imagepost = bot.r.submission(id=bot.config['bot']['imagethread'])
+if('imagethread' in bot.config):
+  imagepost = bot.r.submission(id=bot.config['imagethread'])
   header = re.match(r'([\S\s]*)---',imagepost.selftext)
   if(header):
     header = header.group(1)
@@ -117,7 +117,7 @@ log("Loaded image map:")
 pprint(imagemap.get_dict())
 sys.stdout.flush()
 
-ext_list = '|'.join(bot.config['bot']['matching']['extensions'] + bot.config['bot']['matching']['animated_extensions'])
+ext_list = '|'.join(bot.config['matching']['extensions'] + bot.config['matching']['animated_extensions'])
 maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
 generate_statuspage(bot)
@@ -154,7 +154,7 @@ while True:
     time.sleep(sleep_secs)
 
     log("Opening database...")
-    memes = MemeDb(bot.config['bot']['dbfile'])
+    memes = MemeDb(bot.config['dbfile'])
 
     log("Starting comment stream...")
     last_restart = time.time()
@@ -200,7 +200,7 @@ while True:
             if(not comment.is_root):
               parent = bot.r.comment(comment.parent_id[3:])
               subreddit = comment.subreddit.display_name.lower()
-              if(parent.author and parent.author.name == bot.config['account']['username'] and subreddit != bot.config['account']['username']):
+              if(parent.author and parent.author.name == bot.username and subreddit != bot.username):
                 log("Sending warning to %s for reply-reply...",(comment.author))
 
                 #Always with the plurals
@@ -214,7 +214,7 @@ while True:
                 message = 'Here %s you wanted: %s\n\n%s' % (
                   plural,
                   form_reply(commentlinks, None),
-                  bot.config['bot']['toomuch']
+                  bot.config['toomuch']
                 )
 
                 bot.r.redditor(comment.author).message('I\'m glad you like me, but...',message,raise_captcha_exception=True)

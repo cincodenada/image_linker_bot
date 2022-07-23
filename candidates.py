@@ -5,7 +5,7 @@ from joelbot import BaseBot
 from memedb import MemeDb
 
 bot = BaseBot()
-db = MemeDb(bot.config['bot']['dbfile'])
+db = MemeDb(bot.config['dbfile'])
 
 check_days = int(sys.argv[1]) if len(sys.argv) > 1 else 365
 

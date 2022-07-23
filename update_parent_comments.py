@@ -3,7 +3,7 @@ from joelbot import JoelBot
 
 bot = JoelBot('ilb_test')
 
-conn = sqlite3.connect(bot.config['bot']['dbfile'])
+conn = sqlite3.connect(bot.config['dbfile'])
 conn.row_factory = sqlite3.Row
 conn.isolation_level = None
 c = conn.cursor()

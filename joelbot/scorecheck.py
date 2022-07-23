@@ -15,7 +15,7 @@ except:
 
 class ScoreCheck:
   def __init__(self, bot):
-    self.conn = sqlite3.connect(bot.config['bot']['dbfile'])
+    self.conn = sqlite3.connect(bot.config['dbfile'])
     self.conn.row_factory = sqlite3.Row
     # Leave autocommit off
     self.c = self.conn.cursor()
@@ -45,7 +45,7 @@ class ScoreCheck:
     # Comment deletion taken straight from autowikibot
     # No need to reinvent the wheel
     log("COMMENT SCORE CHECK CYCLE STARTED")
-    user = self.bot.r.redditor(self.bot.config['account']['username'])
+    user = self.bot.r.redditor(self.bot.username)
             
     for c in user.comments.new(limit=None):
       

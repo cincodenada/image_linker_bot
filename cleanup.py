@@ -10,8 +10,8 @@ bot = JoelBot('all',useragent='cleanup')
 while True:
   try:
     bot.cleanup()
-    bot.log("Sleeping for %d seconds...", bot.config['bot']['cleanup_time'])
-    sleep(bot.config['bot']['cleanup_time'])
+    bot.log("Sleeping for %d seconds...", bot.config['cleanup_time'])
+    sleep(bot.config['cleanup_time'])
 
   except prawcore.exceptions.OAuthException:
     bot.refresh_oauth()
