@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # vim: sw=2 ts=2 sts=2 et :
+import sys
 import signal
 import time
 from pprint import pformat
@@ -17,15 +18,20 @@ def handle_signal(signum, frame):
 signal.signal(signal.SIGHUP, handle_signal)
 
 bot = LinkerBot('all')
+sys.stdout.flush()
 
 numchecked = 0
 numsamples = 0
 maxsamples = 1000
 update_period = 100
 totaltime = 0
-last_restart = time.time() - 10;
+
 sleep_secs = 5
 max_sleep = 2**16
+
+last_restart = time.time() - sleep_secs*2;
+last_comment = None
+
 while True:
   try:
     #Sanity check: sleep a bit before logging things
@@ -39,20 +45,21 @@ while True:
       #Be safe here cause we can spin into disk-eating death if we die before sleeping
       try:
         log("Restarted too quickly, refreshing comments and backing off to %d seconds...", sleep_secs)
-        if(comment and hasattr(comment, '__dict__')):
-          log("Last comment: %s", pformat(comment.__dict__))
+        if(last_comment and hasattr(last_comment, '__dict__')):
+          log("Last comment: %s", pformat(last_comment.__dict__))
         else:
-          log("Last comment: %s", pformat(comment))
+          log("Last comment: %s", pformat(last_comment))
       except Exception, e:
         print traceback.format_exc()
     else:
       sleep_secs = 5
-    time.sleep(sleep_secs)
 
-    bot.start()
+    log("Letting things settle...")
+    time.sleep(sleep_secs)
 
     log("Starting comment stream...")
     last_restart = time.time()
+    sys.stdout.flush()
     while True:
       start = time.time();
       try:
@@ -60,7 +67,6 @@ while True:
         numchecked += 1
       except EmptyBodyError, e:
         log("Comment without body: %s", e.message)
-        pass
       duration = time.time() - start
 
       totaltime += duration
@@ -78,6 +84,7 @@ while True:
     bot.refresh_comments()
 
   except prawcore.exceptions.OAuthException:
+    log("Refreshing auth...")
     bot.refresh_oauth()
   except KeyboardInterrupt:
     log("Shutting down after scanning %d comments...",(numchecked))

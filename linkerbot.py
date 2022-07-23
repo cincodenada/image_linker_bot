@@ -35,6 +35,7 @@ class LinkerBot(JoelBot):
     pprint(self.imagemap.get_dict())
     sys.stdout.flush()
 
+    log("Generating statuspage...")
     self.generate_statuspage()
 
     log("Opening database...")
@@ -120,7 +121,7 @@ class LinkerBot(JoelBot):
         imagepost.edit("%s---\n%s" % (header, markdown))
 
   def next(self):
-    comment = next(self.comment_stream)
+    comment = self.comment_stream.next()
     if not hasattr(comment, 'body'):
       raise EmptyBodyError(str(comment))
 
