@@ -131,7 +131,7 @@ class LinkerBot(JoelBot):
 
     ts = time.time()
     commentlinks = collections.OrderedDict()
-    for imagekey, (key, ext, urls) in self.get_images(matches).iteritems():
+    for imagekey, (prefix, key, ext, urls) in self.get_images(matches).iteritems():
       if urls:
         linktext = "%s.%s" % (key,ext)
         if(len(prefix.strip()) > 0):
@@ -180,7 +180,7 @@ class LinkerBot(JoelBot):
 
       # Add the match to the list if it's not a dup
       if imagekey not in results:
-        results[imagekey] = (key, ext, urls)
+        results[imagekey] = (prefix, key, ext, urls)
 
     return results
 
