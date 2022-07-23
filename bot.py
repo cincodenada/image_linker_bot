@@ -38,7 +38,7 @@ class LinkerBot(JoelBot):
     pprint(self.imagemap.get_dict())
     sys.stdout.flush()
 
-    self.ext_list = '|'.join(self.config['matching']['extensions'] + self.config['matching']['animated_extensions'])
+    ext_list = '|'.join(self.config['matching']['extensions'] + self.config['matching']['animated_extensions'])
     self.maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
 
     self.generate_statuspage()
@@ -67,7 +67,10 @@ class LinkerBot(JoelBot):
     f = open('status.html', 'w')
     t_data = {
       'last_restarted': datetime.fromtimestamp(time.time()),
-      'config': self.allconfig,
+      'config': {
+        'bot': self.config,
+        'account': self.account_config,
+      },
       'num_keys': self.imagemap.num_keys(),
       'num_images': self.imagemap.num_images(),
       'imagelist': self.imagemap.get_tuples(),
@@ -168,7 +171,7 @@ class LinkerBot(JoelBot):
 
             commentlinks = collections.OrderedDict()
             foundkeys = []
-            matches = maybeimage.findall(comment.body)
+            matches = self.maybeimage.findall(comment.body)
             if len(matches):
               if(self.should_ignore(comment)):
                 continue

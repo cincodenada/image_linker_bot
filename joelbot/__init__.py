@@ -120,7 +120,6 @@ class JoelBot(BaseBot):
   def load_settings(self):
     log("Reloading config...")
     sys.stdout.flush()
-    self.config = yaml.load(open('config.yaml'))
 
     #Load banlist
     log("Loading banlists...")
