@@ -154,15 +154,14 @@ class LinkerBot(JoelBot):
     start = time.time()
 
     commentlinks = self.get_links(comment)
-    if not commentlinks:
-      return None
+    if commentlinks:
+      if self.is_reply_reply(comment):
+        reply = self.reply_warn(comment, commentlinks)
+      else:
+        reply = self.reply(comment, commentlinks)
 
-    if self.is_reply_reply(comment):
-      reply = self.reply_warn(comment, commentlinks)
-    else:
-      reply = self.reply(comment, commentlinks)
+      self.memes.addComment(comment, reply)
 
-    self.memes.addComment(comment, sent)
     return (comment, time.time() - start)
 
   def get_images(self, matches):
