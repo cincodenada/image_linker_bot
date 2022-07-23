@@ -5,13 +5,13 @@ import praw
 import prawcore
 import time
 from datetime import datetime
+import re
 import yaml
-from pprint import pprint, pformat
+from pprint import pprint
 import random
 import collections
 import shutil
 from mako.template import Template
-import traceback
 
 from joelbot import JoelBot
 from joelbot.util import log, get_sender
@@ -121,8 +121,6 @@ class LinkerBot(JoelBot):
       if(header):
         header = header.group(1)
         imagepost.edit("%s---\n%s" % (header, markdown))
-
-  def start(self):
 
   def next(self):
     comment = next(self.comment_stream)
@@ -237,7 +235,3 @@ class LinkerBot(JoelBot):
 
     self.r.redditor(comment.author).message('I\'m glad you like me, but...',message,raise_captcha_exception=True)
     return message
-
-
-bot = LinkerBot('all')
-bot.run()
