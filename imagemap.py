@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # vim: sw=2 ts=2 sts=2 et :
 import time
+import re
 from difflib import get_close_matches
 
 class ImageMap:
@@ -16,6 +17,12 @@ class ImageMap:
     self.switch_list = match_config['switchable_extensions']
     self.fuzzy_min_len = match_config.get('fuzzy_min_len', 5)
     self.fuzzy_threshold = match_config.get('fuzzy_threshold', 0.6)
+
+    ext_list = '|'.join(match_config['extensions'] + match_config['animated_extensions'])
+    self.maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
+
+  def find_candidates(self, text):
+    return self.maybeimage.findall(text)
 
   def fuzzy_match(self, searchkey):
     if searchkey in self.get_dict():

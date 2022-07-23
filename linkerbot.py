@@ -35,9 +35,6 @@ class LinkerBot(JoelBot):
     pprint(self.imagemap.get_dict())
     sys.stdout.flush()
 
-    ext_list = '|'.join(self.config['matching']['extensions'] + self.config['matching']['animated_extensions'])
-    self.maybeimage = re.compile(r'(^|\s|\^+)(\w+)\.(%s)\b' % (ext_list),re.IGNORECASE)
-
     self.generate_statuspage()
 
     log("Opening database...")
@@ -127,7 +124,7 @@ class LinkerBot(JoelBot):
     if not hasattr(comment, 'body'):
       raise EmptyBodyError(str(comment))
 
-    matches = self.maybeimage.findall(comment.body)
+    matches = self.imagemap.find_candidates(comment.body)
     if len(matches):
       # Do this here because it's a db call, don't want to do it unless we match
       if(self.should_ignore(comment)):
