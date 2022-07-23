@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 # vim: sw=2 ts=2 sts=2 et :
 import sys
 import signal
@@ -76,7 +77,7 @@ while True:
       if(num_checked % update_period == 0):
         log("\rChecked %d comments...",(num_checked),stderr=True,newline=False)
       if(num_samples >= max_samples):
-        log("Average processing time of last %d comments: %.2f/%.2f ms",(num_samples, total_processing/num_samples*1000, total_overall/num_samples*1000))
+        log(u"Average processing/total time of last %d comments: %.2f µs/%.2f ms",(num_samples, total_processing/num_samples*1e6, total_overall/num_samples*1e3))
         num_samples = 0
         total_overall = 0
         total_processing = 0
