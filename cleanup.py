@@ -16,7 +16,7 @@ while True:
     sleep(bot.config['cleanup_time'])
 
   except prawcore.exceptions.OAuthException:
-    bot.refresh_oauth()
+    bot.auth_oauth()
   except KeyboardInterrupt:
     bot.log("Shutting down...")
     sys.exit("Keyboard interrupt, shutting down...")

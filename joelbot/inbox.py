@@ -5,7 +5,7 @@ from commentstore import CommentStore
 
 class InboxBot(BaseBot):
   def __init__(self, **kwargs):
-    BaseBot.__init__(self, **kwargs)
+    BaseBot.__init__(self, useragent='inbox', **kwargs)
 
     self.inbox = CommentStore(self.config['dbfile'])
     self.ignores = IgnoreList(self.config['dbfile'], 'ignore')

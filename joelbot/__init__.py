@@ -13,3 +13,4 @@ import random
 
 from .commenter import CommenterBot
 from .cleanup import CleanupBot
+from .inbox import InboxBot
