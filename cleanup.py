@@ -1,15 +1,17 @@
-from joelbot import JoelBot
+from joelbot import CleanupBot
 import traceback
 from time import sleep
 import sys
 import praw
 import prawcore
 
-bot = JoelBot('all',useragent='cleanup')
+bot = CleanupBot()
 
 while True:
   try:
-    bot.cleanup()
+    bot.run()
+    bot.print_report()
+    bot.save_report()
     bot.log("Sleeping for %d seconds...", bot.config['cleanup_time'])
     sleep(bot.config['cleanup_time'])
 

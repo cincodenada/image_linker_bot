@@ -11,9 +11,9 @@ import re
 import urlparse
 import random
 
-from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
 from unseencomments import UnseenComments
 from commentstore import CommentStore
 
-from commenter import CommenterBot
+from .commenter import CommenterBot
+from .scorecheck import CleanupBot

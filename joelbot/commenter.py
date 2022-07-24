@@ -7,7 +7,6 @@ import prawcore
 
 from .basebot import BaseBot
 from .util import log, add_r, get_sender
-from scorecheck import ScoreCheck
 from ignorelist import IgnoreList
 from unseencomments import UnseenComments
 from commentstore import CommentStore
@@ -74,12 +73,6 @@ class CommenterBot(BaseBot):
 
   def save_seen(self):
     self.comment_stream.save_state()
-
-  def cleanup(self):
-    sc = ScoreCheck(self)
-    sc.run()
-    sc.print_report()
-    sc.save_report()
 
   def get_template(self):
     if('status_template' in self.config):

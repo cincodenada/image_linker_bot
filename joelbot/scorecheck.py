@@ -4,6 +4,7 @@ import sqlite3
 import time
 import sys
 
+from .basebot import BaseBot
 from .util import success, warn, log, fail, function_timeout
 
 try:
@@ -12,10 +13,11 @@ try:
 except:
   have_quantile = False
 
+class CleanupBot(BaseBot):
+  def __init__(self, **kwargs):
+    BaseBot.__init__(self, useragent='cleanup', **kwargs)
 
-class ScoreCheck:
-  def __init__(self, bot):
-    self.conn = sqlite3.connect(bot.config['dbfile'])
+    self.conn = sqlite3.connect(self.config['dbfile'])
     self.conn.row_factory = sqlite3.Row
     # Leave autocommit off
     self.c = self.conn.cursor()
@@ -39,13 +41,11 @@ class ScoreCheck:
     self.subreddit_map = {}
     self.total_score = 0
 
-    self.bot = bot
-
   def run(self, delete_negative = True):
     # Comment deletion taken straight from autowikibot
     # No need to reinvent the wheel
     log("COMMENT SCORE CHECK CYCLE STARTED")
-    user = self.bot.r.redditor(self.bot.username)
+    user = self.r.redditor(self.username)
             
     for c in user.comments.new(limit=None):
       
@@ -58,7 +58,7 @@ class ScoreCheck:
       self.score_map[c.id] = c.score
 
       colorname = 'none'
-      if c.score < 1: # or sub.lower() in self.bot.bans:
+      if c.score < 1:
         if(delete_negative):
           self.del_list.append((sub.lower(), c.score, c.id))
           c.delete()
