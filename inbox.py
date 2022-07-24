@@ -1,11 +1,11 @@
-from joelbot import JoelBot
+from joelbot import CommenterBot
 from joelbot.util import log
 import traceback
 from time import sleep
 import sys
 import prawcore
 
-bot = JoelBot('all',useragent='inbox')
+bot = CommenterBot('all',useragent='inbox')
 
 while True:
   try:

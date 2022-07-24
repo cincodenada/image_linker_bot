@@ -13,7 +13,7 @@ import collections
 import shutil
 from mako.template import Template
 
-from joelbot import JoelBot
+from joelbot import CommenterBot
 from joelbot.util import log, get_sender
 from imagemap import ImageMap
 from memedb import MemeDb
@@ -21,9 +21,9 @@ from memedb import MemeDb
 class EmptyBodyError(RuntimeError):
   pass
 
-class LinkerBot(JoelBot):
+class LinkerBot(CommenterBot):
   def __init__(self, *args, **kwargs):
-    JoelBot.__init__(self, *args, **kwargs)
+    CommenterBot.__init__(self, *args, **kwargs)
 
     log("\n", stderr=True)
     log("Starting up...", stderr=True)

@@ -1,7 +1,7 @@
 import sqlite3
-from joelbot import JoelBot
+from joelbot import CommenterBot
 
-bot = JoelBot('ilb_test')
+bot = CommenterBot('ilb_test')
 
 conn = sqlite3.connect(bot.config['dbfile'])
 conn.row_factory = sqlite3.Row
