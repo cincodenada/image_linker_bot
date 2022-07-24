@@ -98,12 +98,12 @@ class CleanupBot(BaseBot):
     urate = round(self.counts['upvoted'] / float(self.counts['total']) * 100)
     nrate = round(self.counts['unvoted'] / float(self.counts['total']) * 100)
     drate = round(self.counts['downvoted'] / float(self.counts['total']) * 100)
-    warn("Score > 10:   %s\t%s\b\b %%",(self.counts['up10'],u10rate))
-    warn("Upvoted:      %s\t%s\b\b %%",(self.counts['upvoted'],urate))
-    warn("Unvoted       %s\t%s\b\b %%",(self.counts['unvoted'],nrate))
-    warn("Downvoted:    %s\t%s\b\b %%",(self.counts['downvoted'],drate))
-    warn("Total:        %s",self.counts['total'])
-    warn("Avg Score:    %f",self.avg_score)
+    warn("Score > 10: %6s%6s\b\b %%",(self.counts['up10'],u10rate))
+    warn("Upvoted:    %6s%6s\b\b %%",(self.counts['upvoted'],urate))
+    warn("Unvoted     %6s%6s\b\b %%",(self.counts['unvoted'],nrate))
+    warn("Downvoted:  %6s%6s\b\b %%",(self.counts['downvoted'],drate))
+    warn("Total:      %6s",self.counts['total'])
+    warn("Avg Score:  %6.3f",self.avg_score)
     if have_quantile:
       quantspots = [0.25,0.5,0.75]
       score_list = sorted(self.score_map.values())
