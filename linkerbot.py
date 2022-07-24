@@ -39,7 +39,7 @@ class LinkerBot(JoelBot):
     self.generate_statuspage()
 
     log("Opening database...")
-    self.memes = MemeDb(self.config['dbfile'])
+    self.memelog = MemeDb(self.config['dbfile'])
 
   def form_reply(self, link_list, footer = 'footer'):
     lines = []
@@ -139,9 +139,9 @@ class LinkerBot(JoelBot):
 
         url = random.choice(urls)
         commentlinks[linktext] = url
-        self.memes.addMatch(comment, key, ext, ts, imagekey, url)
+        self.memelog.addMatch(comment, key, ext, ts, imagekey, url)
       else:
-        self.memes.addCandidate(comment, key, ext, ts)
+        self.memelog.addCandidate(comment, key, ext, ts)
         log(u"\nPossible new image for %s\n%s %s %s",(comment.permalink, prefix, key, ext))
 
     return commentlinks
@@ -160,7 +160,7 @@ class LinkerBot(JoelBot):
       else:
         reply = self.reply(comment, commentlinks)
 
-      self.memes.addComment(comment, reply)
+      self.memelog.addComment(comment, reply)
 
     return (comment, time.time() - start)
 
