@@ -98,7 +98,7 @@ class ImageMap:
     return urls
 
   def get_dict(self):
-    if(len(list(self.as_dict.keys())) == 0):
+    if(len(self.as_dict) == 0):
       for key, urls in self.images.items():
         if(not isinstance(urls, list)):
           urls = [urls]
@@ -132,7 +132,7 @@ class ImageMap:
     return self.as_tuples
 
   def num_keys(self):
-    return len(list(self.get_dict().keys())) - len(self.hidden_keys)
+    return len(self.get_dict()) - len(self.hidden_keys)
 
   def num_images(self):
     return sum([1 if (type(l) is str) else len(l) for l in self.images.values()])

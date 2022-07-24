@@ -194,7 +194,7 @@ class LinkerBot(CommenterBot):
   def reply(self, comment, commentlinks):
     replytext = self.form_reply(commentlinks)
     try:
-      log("Commenting on %s (%s)",(comment.permalink, ', '.join(list(commentlinks.keys()))))
+      log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
       comment.reply(replytext)
     except praw.exceptions.APIException as e:
       if(e.error_type == "TOO_OLD"):
