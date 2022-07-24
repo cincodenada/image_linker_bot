@@ -5,6 +5,8 @@ import sys
 import praw
 import prawcore
 
+from joelbot.util import log
+
 bot = CleanupBot()
 
 while True:
@@ -12,13 +14,13 @@ while True:
     bot.run()
     bot.print_report()
     bot.save_report()
-    bot.log("Sleeping for %d seconds...", bot.config['cleanup_time'])
+    log("Sleeping for %d seconds...", bot.config['cleanup_time'])
     sleep(bot.config['cleanup_time'])
 
   except prawcore.exceptions.OAuthException:
     bot.auth_oauth()
   except KeyboardInterrupt:
-    bot.log("Shutting down...")
+    log("Shutting down...")
     sys.exit("Keyboard interrupt, shutting down...")
   except Exception, e:
     print traceback.format_exc()

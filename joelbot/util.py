@@ -15,20 +15,20 @@ def log(format, params=None, stderr=False,newline=True):
   out = sys.stderr if stderr else sys.stdout
   codecs.getwriter('utf-8')(out).write(logline)
 
-def fail(msg, **kwargs):
-    log('\033[91m'+msg+'\033[0m', **kwargs)
+def fail(msg, *args, **kwargs):
+    log('\033[91m'+msg+'\033[0m', *args, **kwargs)
 
-def warn(msg, **kwargs):
-    log('\033[93m'+msg+'\033[0m', **kwargs)
+def warn(msg, *args, **kwargs):
+    log('\033[93m'+msg+'\033[0m', *args, **kwargs)
 
-def success(msg, **kwargs):
-    log('\033[92m'+msg+'\033[0m', **kwargs)
+def success(msg, *args, **kwargs):
+    log('\033[92m'+msg+'\033[0m', *args, **kwargs)
 
-def special(msg, **kwargs):
-    log('\033[95m'+msg+'\033[0m', **kwargs)
+def special(msg, *args, **kwargs):
+    log('\033[95m'+msg+'\033[0m', *args, **kwargs)
 
-def bluelog(msg, **kwargs):
-    log('\033[94m'+msg+'\033[0m', **kwargs)
+def bluelog(msg, *args, **kwargs):
+    log('\033[94m'+msg+'\033[0m', *args, **kwargs)
 
 #Decorator borrowed from http://compgroups.net/comp.lang.python/max-time-wait-for-a-function/182496
 def function_timeout(seconds):
