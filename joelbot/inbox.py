@@ -42,10 +42,10 @@ class InboxBot(BaseBot):
         return action
     return None
 
-  def do_command(self, action, target, ref_id=None, reason=None):
+  def do_command(self, action, target, ref_id=None):
     if action == 'ignore':
       log("Ignoring {:s}...".format(target))
-      self.ignores.ignore_sender(target, ref_id, reason or "message")
+      self.ignores.ignore_sender(target, ref_id)
 
     elif action == 'unignore':
       log("Unignoring {:s}...".format(target))
@@ -53,11 +53,11 @@ class InboxBot(BaseBot):
 
     elif action == 'ban':
       log("Recording ban from {:s}...".format(target))
-      self.bans.ignore_sender(target, ref_id, reason or "ban")
+      self.bans.ignore_sender(target, ref_id)
 
     elif action == 'softban':
       log("Recording soft ban from {:s}...".format(target))
-      self.bans.ignore_sender(target, ref_id, reason or "softban")
+      self.bans.ignore_sender(target, ref_id)
 
   def reply_to(self, m, subject, reply):
     if(m.subreddit):

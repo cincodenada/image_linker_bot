@@ -215,7 +215,9 @@ class LinkerBot(CommenterBot):
       log(e.response.text)
       if e.response.status_code == 403:
         # TODO: get_sender being external here is ick
-        self.do_command('ban', get_sender(comment), reason="comment_forbidden")
+        subreddit = get_sender(comment)
+        log("Auth error from {:s}, adding as ban...".format(subreddit))
+        self.bans.ignore_sender(subreddit, reason="comment_forbidden")
       else:
         raise e
 
