@@ -31,6 +31,7 @@ class CleanupBot(BaseBot):
 
     self.counts = {
       'total': 0,
+      'up10': 0,
       'upvoted': 0,
       'unvoted': 0,
       'downvoted': 0,
@@ -66,6 +67,7 @@ class CleanupBot(BaseBot):
         colornamesc = 'down' 
       elif c.score > 10:
         colorname = 'up10'
+        self.counts['up10'] += 1
         self.counts['upvoted'] += 1
       elif c.score > 1:
         colorname = 'up'
@@ -92,9 +94,11 @@ class CleanupBot(BaseBot):
   def print_report(self):
     print ("")
     log("COMMENT SCORE CHECK CYCLE COMPLETED")
+    u10rate = round(self.counts['up10'] / float(self.counts['total']) * 100)
     urate = round(self.counts['upvoted'] / float(self.counts['total']) * 100)
     nrate = round(self.counts['unvoted'] / float(self.counts['total']) * 100)
     drate = round(self.counts['downvoted'] / float(self.counts['total']) * 100)
+    warn("Score > 10:   %s\t%s\b\b %%",(self.counts['up10'],u10rate))
     warn("Upvoted:      %s\t%s\b\b %%",(self.counts['upvoted'],urate))
     warn("Unvoted       %s\t%s\b\b %%",(self.counts['unvoted'],nrate))
     warn("Downvoted:    %s\t%s\b\b %%",(self.counts['downvoted'],drate))
