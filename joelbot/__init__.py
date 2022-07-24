@@ -11,6 +11,7 @@ import re
 import urlparse
 import random
 
+from .basebot import BaseBot
 from .commenter import CommenterBot
 from .cleanup import CleanupBot
 from .inbox import InboxBot
