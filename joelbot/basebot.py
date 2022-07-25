@@ -18,10 +18,8 @@ class BaseBot:
     #Load config and set up
     log("Logging in...")
 
-    allconfig = yaml.load(open(config_file))
-    self.config = allconfig['bot']
-    self.account_config = allconfig['account']
-    self.username = self.account_config['username']
+    self.config_file = config_file
+    self.load_settings()
 
     self.start_time = time.time()
 
@@ -40,6 +38,15 @@ class BaseBot:
     else:
       log("Error! Password login no longer supported!", stderr=True)
       sys.exit()
+
+  def load_settings(self):
+    log("Reloading config...")
+    sys.stdout.flush()
+
+    allconfig = yaml.load(open(self.config_file))
+    self.config = allconfig['bot']
+    self.account_config = allconfig['account']
+    self.username = self.account_config['username']
 
   def auth_oauth(self):
     if self.get_refresh_token():

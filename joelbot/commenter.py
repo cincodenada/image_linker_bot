@@ -24,8 +24,7 @@ class CommenterBot(BaseBot):
     self.bans = IgnoreList(self.config['dbfile'], 'ban')
 
   def load_settings(self):
-    log("Reloading config...")
-    sys.stdout.flush()
+    BaseBot.load_settings(self)
 
     #Load banlist
     log("Loading banlists...")
