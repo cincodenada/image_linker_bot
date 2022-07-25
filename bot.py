@@ -14,7 +14,7 @@ from linkerbot import LinkerBot, EmptyBodyError
 def handle_signal(signum, frame):
   global bot
   if(signum == signal.SIGHUP):
-      bot.load_settings()
+      bot.reload_settings()
 
 signal.signal(signal.SIGHUP, handle_signal)
 

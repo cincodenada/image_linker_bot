@@ -18,14 +18,16 @@ class CommenterBot(BaseBot):
       self.comment_stream = UnseenComments(self.r, subreddit, self.config['seen_len'])
       self.subreddit = subreddit
 
-    self.load_settings()
+    self.load_banlist()
 
     self.ignores = IgnoreList(self.config['dbfile'], 'ignore')
     self.bans = IgnoreList(self.config['dbfile'], 'ban')
 
-  def load_settings(self):
-    BaseBot.load_settings(self)
+  def reload_settings(self):
+    BaseBot.reload_settings(self)
+    self.load_banlist()
 
+  def load_banlist(self):
     #Load banlist
     log("Loading banlists...")
     sys.stdout.flush()

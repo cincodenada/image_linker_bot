@@ -41,6 +41,27 @@ class LinkerBot(CommenterBot):
     log("Opening database...")
     self.memelog = MemeDb(self.config['dbfile'])
 
+  def reload_settings(self):
+    CommenterBot.load_settings(self)
+    self.load_map()
+
+  def load_map(self):
+    #Load image map, first from wiki
+    try:
+      imageconf = self.get_wiki_yaml('botconf/imagelist')
+      log('Loaded imagelist from wiki')
+    except Exception as e:
+      log("Couldn't load imagelist from wiki: " + str(sys.exc_info()[0]))
+      imageconf = None
+
+    # Fall back to local file
+    if not imageconf:
+      imageconf = yaml.load(open('imagelist.yaml'))
+      shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
+      log('Loaded imagelist from file')
+
+    self.imagemap = ImageMap(imageconf, self.config['matching'])
+
   def form_reply(self, link_list, footer = 'footer'):
     lines = []
     for (text, link) in link_list.iteritems():
@@ -70,27 +91,6 @@ class LinkerBot(CommenterBot):
       'imagelist': self.imagemap.get_tuples(),
     }
     f.write(t.render(**t_data))
-
-  def load_settings(self):
-    CommenterBot.load_settings(self)
-    self.load_map()
-
-  def load_map(self):
-    #Load image map, first from wiki
-    try:
-      imageconf = self.get_wiki_yaml('botconf/imagelist')
-      log('Loaded imagelist from wiki')
-    except Exception as e:
-      log("Couldn't load imagelist from wiki: " + str(sys.exc_info()[0]))
-      imageconf = None
-
-    # Fall back to local file
-    if not imageconf:
-      imageconf = yaml.load(open('imagelist.yaml'))
-      shutil.copy('imagelist.yaml','imagelist.%d.yaml' % (time.time()))
-      log('Loaded imagelist from file')
-
-    self.imagemap = ImageMap(imageconf, self.config['matching'])
 
   def publish_map(self):
     markdown = self.imagemap.get_formatted()
