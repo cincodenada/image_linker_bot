@@ -71,6 +71,10 @@ class LinkerBot(CommenterBot):
     }
     f.write(t.render(**t_data))
 
+  def load_settings(self):
+    CommenterBot.load_settings(self)
+    self.load_map()
+
   def load_map(self):
     #Load image map, first from wiki
     try:
