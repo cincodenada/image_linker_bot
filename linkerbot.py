@@ -156,16 +156,7 @@ class LinkerBot(CommenterBot):
       raise EmptyBodyError(str(comment))
 
     start = time.time()
-
-    commentlinks = self.get_links(comment)
-    if commentlinks:
-      if self.is_reply_reply(comment):
-        reply = self.reply_warn(comment, commentlinks)
-      else:
-        reply = self.reply(comment, commentlinks)
-
-      self.memelog.addComment(comment, reply)
-
+    self.reply(comment)
     return (comment, time.time() - start)
 
   def get_images(self, matches):
@@ -187,6 +178,19 @@ class LinkerBot(CommenterBot):
 
     return results
 
+  def reply(self, comment):
+    reply = None
+    commentlinks = self.get_links(comment)
+    if commentlinks:
+      if self.is_reply_reply(comment):
+        reply = self.reply_warn(comment, commentlinks)
+      else:
+        reply = self.reply_public(comment, commentlinks)
+
+      self.memelog.addComment(comment, reply)
+
+    return reply
+
   def is_reply_reply(self, comment):
     if comment.is_root:
       return False
@@ -195,7 +199,7 @@ class LinkerBot(CommenterBot):
     subreddit = comment.subreddit.display_name.lower()
     return parent.author and parent.author.name == self.username and subreddit != self.username
 
-  def reply(self, comment, commentlinks):
+  def reply_public(self, comment, commentlinks):
     replytext = self.form_reply(commentlinks)
     try:
       log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
