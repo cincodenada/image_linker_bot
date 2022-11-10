@@ -8,7 +8,7 @@ from .basebot import BaseBot
 from .util import success, warn, log, fail, function_timeout
 
 try:
-  from quantile import quantile
+  from .quantile import quantile
   have_quantile = True
 except:
   have_quantile = False
@@ -75,7 +75,7 @@ class CleanupBot(BaseBot):
         self.counts['unvoted'] += 1
 
       # Print the list entry
-      print self.color_num(c.score, colorname),
+      print(self.color_num(c.score, colorname), end=' ')
       sys.stdout.flush()
 
     self.avg_score = float(self.total_score)/float(self.counts['total']) if self.counts['total'] else 0
@@ -117,7 +117,7 @@ class CleanupBot(BaseBot):
           (cid TEXT, subreddit TEXT, score INTEGER, ts INTEGER)''')
       self.c.execute('''CREATE INDEX IF NOT EXISTS cscores_time ON comment_scores(ts)''')
 
-      for cid, score in self.score_map.iteritems():
+      for cid, score in self.score_map.items():
         self.c.execute('''INSERT INTO comment_scores(cid, subreddit, score, ts) VALUES(?,?,?,?)''',
             (cid, self.subreddit_map[cid], score, ts))
       self.conn.commit()
@@ -134,6 +134,6 @@ class CleanupBot(BaseBot):
         self.c.execute('''INSERT INTO deleted_comments(cid, subreddit, score, ts) VALUES(?,?,?,?)''', curcols)
       self.conn.commit()
 
-    except Exception, e:
+    except Exception as e:
       warn(e)
       warn("Failed to write subreddit scores")

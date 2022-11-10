@@ -1,7 +1,7 @@
 from .basebot import BaseBot
 from .util import log, get_sender
-from ignorelist import IgnoreList
-from commentstore import CommentStore
+from .ignorelist import IgnoreList
+from .commentstore import CommentStore
 
 class InboxBot(BaseBot):
   def __init__(self, **kwargs):

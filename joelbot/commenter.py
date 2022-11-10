@@ -7,8 +7,8 @@ import prawcore
 
 from .basebot import BaseBot
 from .util import log, add_r, get_sender
-from ignorelist import IgnoreList
-from unseencomments import UnseenComments
+from .ignorelist import IgnoreList
+from .unseencomments import UnseenComments
 
 class CommenterBot(BaseBot):
   def __init__(self, subreddit=None, **kwargs):
@@ -41,7 +41,7 @@ class CommenterBot(BaseBot):
       mybans = [line.lstrip(' *-') for line in mybans.content_md.split('\n')\
           if not (line.strip() == '' or line.startswith('#'))]
     except prawcore.exceptions.ResponseException as e:
-      print e
+      print(e)
       log("Couldn't load bot-specific banlist")
       mybans = []
 

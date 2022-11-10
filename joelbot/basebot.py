@@ -5,7 +5,7 @@ import prawcore
 import time
 import yaml
 import sys
-import urlparse
+import urllib.parse
 import random
 
 from .util import log
@@ -70,10 +70,10 @@ class BaseBot:
 
     log('Go to the following URL, copy the URL that you are redirected to, then come back and paste it here:')
     log(auth_url)
-    redirect_url = raw_input("Redirected URL: ")
+    redirect_url = input("Redirected URL: ")
 
-    urlparts = urlparse.urlsplit(redirect_url)
-    querydata = urlparse.parse_qs(urlparts.query)
+    urlparts = urllib.parse.urlsplit(redirect_url)
+    querydata = urllib.parse.parse_qs(urlparts.query)
     self.refresh_token = self.r.auth.authorize(querydata['code'])
     return self.refresh_token
 

@@ -19,6 +19,6 @@ while True:
   except KeyboardInterrupt:
     log("Shutting down...")
     sys.exit("Keyboard interrupt, shutting down...")
-  except Exception, e:
-    print traceback.format_exc()
+  except Exception as e:
+    print(traceback.format_exc())
     sleep(5)

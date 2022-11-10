@@ -24,19 +24,19 @@ class UnseenComments:
   def refresh_comments(self):
     self.comment_stream = self.subreddit.stream.comments()
 
-  def next(self):
-    next_comment = self.comment_stream.next()
+  def __next__(self):
+    next_comment = next(self.comment_stream)
     #Deal with reaching the end of comment streams?
     if next_comment is None:
       self.refresh_comments()
-      next_comment = self.comment_stream.next()
+      next_comment = next(self.comment_stream)
       while(next_comment is None):
         time.sleep(5)
-        next_comment = self.comment_stream.next()
+        next_comment = next(self.comment_stream)
 
     if next_comment.id in self.already_seen:
-      print "Already saw comment %s, skipping..." % (next_comment.id)
-      return self.next()
+      print("Already saw comment %s, skipping..." % (next_comment.id))
+      return next(self)
 
     self.already_seen.append(next_comment.id)
     return next_comment;

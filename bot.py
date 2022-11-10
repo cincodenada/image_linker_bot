@@ -51,8 +51,8 @@ while True:
           log("Last comment: %s", pformat(last_comment.__dict__))
         else:
           log("Last comment: %s", pformat(last_comment))
-      except Exception, e:
-        print traceback.format_exc()
+      except Exception as e:
+        print(traceback.format_exc())
     else:
       sleep_secs = 5
 
@@ -65,9 +65,9 @@ while True:
     while True:
       start = time.time();
       try:
-        (last_comment, processing_time) = bot.next()
+        (last_comment, processing_time) = next(bot)
         num_checked += 1
-      except EmptyBodyError, e:
+      except EmptyBodyError as e:
         log("Comment without body: %s", e.message)
       overall_time = time.time() - start
 
@@ -77,7 +77,7 @@ while True:
       if(num_checked % update_period == 0):
         log("\rChecked %d comments...",(num_checked),stderr=True,newline=False)
       if(num_samples >= max_samples):
-        log(u"Average processing/total time of last %d comments: %.2f µs/%.2f ms",(num_samples, total_processing/num_samples*1e6, total_overall/num_samples*1e3))
+        log("Average processing/total time of last %d comments: %.2f µs/%.2f ms",(num_samples, total_processing/num_samples*1e6, total_overall/num_samples*1e3))
         num_samples = 0
         total_overall = 0
         total_processing = 0
@@ -94,6 +94,6 @@ while True:
     log("Shutting down after scanning %d comments...",(num_checked))
     bot.save_seen()
     sys.exit("Keyboard interrupt, shutting down...")
-  except Exception, e:
-    log(u"Error!")
-    print traceback.format_exc()
+  except Exception as e:
+    log("Error!")
+    print(traceback.format_exc())

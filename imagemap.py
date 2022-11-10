@@ -29,7 +29,7 @@ class ImageMap:
       return searchkey
 
     if len(searchkey) >= self.fuzzy_min_len:
-      fuzzy_matches = get_close_matches(searchkey, self.get_dict().keys(), 1, self.fuzzy_threshold)
+      fuzzy_matches = get_close_matches(searchkey, list(self.get_dict().keys()), 1, self.fuzzy_threshold)
       if len(fuzzy_matches):
         return fuzzy_matches[0]
 
@@ -98,13 +98,13 @@ class ImageMap:
     return urls
 
   def get_dict(self):
-    if(len(self.as_dict.keys()) == 0):
-      for key, urls in self.images.iteritems():
+    if(len(list(self.as_dict.keys())) == 0):
+      for key, urls in self.images.items():
         if(not isinstance(urls, list)):
           urls = [urls]
         self.as_dict[key] = urls
 
-      for key, aliases in self.aliases.iteritems():
+      for key, aliases in self.aliases.items():
         if(not isinstance(aliases, list)):
           aliases = [aliases]
 
@@ -116,7 +116,7 @@ class ImageMap:
   def get_tuples(self):
     if(len(self.as_tuples) == 0):
       hidden_set = set(self.hidden_keys)
-      for key, urls in self.images.iteritems():
+      for key, urls in self.images.items():
         if key in self.hidden_keys: continue
         keylist = [key]
         if(not isinstance(urls, list)):
@@ -132,10 +132,10 @@ class ImageMap:
     return self.as_tuples
 
   def num_keys(self):
-    return len(self.get_dict().keys()) - len(self.hidden_keys)
+    return len(list(self.get_dict().keys())) - len(self.hidden_keys)
 
   def num_images(self):
-    return sum([1 if (type(l) is str) else len(l) for l in self.images.itervalues()])
+    return sum([1 if (type(l) is str) else len(l) for l in self.images.values()])
 
   def get_formatted(self, format='markdown'):
     datestr = time.strftime("%I:%M %p PST, %m/%d")

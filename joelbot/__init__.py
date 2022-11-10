@@ -8,7 +8,7 @@ import json
 import sqlite3
 import sys
 import re
-import urlparse
+import urllib.parse
 import random
 
 from .commenter import CommenterBot

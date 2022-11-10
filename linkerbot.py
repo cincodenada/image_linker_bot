@@ -43,7 +43,7 @@ class LinkerBot(CommenterBot):
 
   def form_reply(self, link_list, footer = 'footer'):
     lines = []
-    for (text, link) in link_list.iteritems():
+    for (text, link) in link_list.items():
       lines.append("[%s](%s)  " % (text, link))
       (urls, peniskey) = self.imagemap.get('thatsapenis')
       if(link in urls):
@@ -131,7 +131,7 @@ class LinkerBot(CommenterBot):
 
     ts = time.time()
     commentlinks = collections.OrderedDict()
-    for imagekey, (prefix, key, ext, urls) in self.get_images(matches).iteritems():
+    for imagekey, (prefix, key, ext, urls) in self.get_images(matches).items():
       if urls:
         linktext = "%s.%s" % (key,ext)
         if(len(prefix.strip()) > 0):
@@ -142,12 +142,12 @@ class LinkerBot(CommenterBot):
         self.memelog.addMatch(comment, key, ext, ts, imagekey, url)
       else:
         self.memelog.addCandidate(comment, key, ext, ts)
-        log(u"\nPossible new image for %s\n%s %s %s",(comment.permalink, prefix, key, ext))
+        log("\nPossible new image for %s\n%s %s %s",(comment.permalink, prefix, key, ext))
 
     return commentlinks
 
-  def next(self):
-    comment = self.comment_stream.next()
+  def __next__(self):
+    comment = next(self.comment_stream)
     if not hasattr(comment, 'body'):
       raise EmptyBodyError(str(comment))
 
@@ -194,9 +194,9 @@ class LinkerBot(CommenterBot):
   def reply(self, comment, commentlinks):
     replytext = self.form_reply(commentlinks)
     try:
-      log("Commenting on %s (%s)",(comment.permalink, ', '.join(commentlinks.keys())))
+      log("Commenting on %s (%s)",(comment.permalink, ', '.join(list(commentlinks.keys()))))
       comment.reply(replytext)
-    except praw.exceptions.APIException, e:
+    except praw.exceptions.APIException as e:
       if(e.error_type == "TOO_OLD"):
         log("Comment too old!")
       elif(e.error_type == "SUBREDDIT_OUTBOUND_LINKING_DISALLOWED"):
@@ -210,7 +210,7 @@ class LinkerBot(CommenterBot):
         time.sleep(sleeptime)
         log("Re-commenting on %s",(comment.permalink))
         comment.reply(replytext)
-    except prawcore.exceptions.ResponseException, e:
+    except prawcore.exceptions.ResponseException as e:
       log("Got response error: %s", (e))
       log(e.response.text)
       if e.response.status_code == 403:

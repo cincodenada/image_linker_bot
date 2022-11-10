@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import sys
 
 from joelbot import BaseBot
@@ -32,4 +32,4 @@ print(count_query)
 
 for candidate in db.c.execute(count_query):
     comment = bot.r.comment(candidate['cid'])
-    print(u"%s (%d/%d) - https://reddit.com%s" % (candidate['key'], candidate['total_count'], candidate['recent_count'], comment.permalink))
+    print("%s (%d/%d) - https://reddit.com%s" % (candidate['key'], candidate['total_count'], candidate['recent_count'], comment.permalink))
