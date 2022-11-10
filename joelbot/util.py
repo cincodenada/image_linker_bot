@@ -13,7 +13,8 @@ def log(format, params=None, stderr=False,newline=True):
 
   # Some arcane nonsense to get Python2 to always output utf-8 even if the terminal encoding is not that
   out = sys.stderr if stderr else sys.stdout
-  codecs.getwriter('utf-8')(out).write(logline)
+  out.reconfigure(encoding='utf-8')
+  print(logline, file=out)
 
 def fail(msg, **kwargs):
     log('\033[91m'+msg+'\033[0m', **kwargs)
